@@ -10,7 +10,7 @@
     <title></title>
 <style>
 *{margin:0;padding:0;}
-body{font-family: 'sans-serif'; background-color: #fdfdfd; line-height: 1.6em;}
+body{font-family: 'sans-serif'; background-color: ##fefefe; line-height: 1.6em;}
 @media all and (min-width: 720px) {
   body{font-size: 18px;}
 }
@@ -23,81 +23,112 @@ body{font-family: 'sans-serif'; background-color: #fdfdfd; line-height: 1.6em;}
   body{font-size: 14px; margin-left: 8%; margin-right: 8%;}
 }
 
-p{margin-bottom: 1.5em;}
-a,a:visited{text-decoration:none;}
-a:hover{text-decoration:underline;}
-div.post-index{
-  max-width:760px;
-  margin: 3em auto;
+a {
+  color:#000;
+  text-decoration: none;
 }
-div.post-index__item { padding: .5em 0; }
-div.post-index__item-timestamp {width: 200px; float: right; text-align:right; padding:.2em; color: #999;}
-div.post-index__item:hover .post-index__item-timestamp {color:#444;}
-div.post-index__item-title a{ display:block;padding-right: 200px; padding:.2em; color: #000; }
-h1,h2,h3{font-family: Georgia, serif;line-height:1.2em;}
-h3{padding-bottom: .4em;}
-.header{
-  padding-top: 2em;
-  max-width: 960px;
+
+a:hover{ text-decoration: underline; }
+
+.container {
+  margin: 4em auto;
+  max-width: 760px;
+  background-color: #fff;
+}
+.header {
   margin: auto;
-  text-align: center;
+  margin-bottom: 3em;
 }
-.header h1{
-  text-align: center;
+
+.header>h1, .header>.navigation{
+  line-height: 70px;
 }
-.header h1 a{
-  width: 100px;
-  height: 100px;
+
+.header>h1{
+  width: 70px;
+  background: url(http://placehold.it/70x70) no-repeat;
+  display: inline-block;
+}
+
+.header>h1>a {
+  display: block;
   text-indent: -10000px;
-  display:block;
-  background: url(http://localhost/tewet.png) no-repeat center;
-  margin: auto;
 }
+
+.header>.navigation{
+  vertical-align: top;
+  text-align: right;
+  float: right;
+}
+.header>.navigation>.navigation__item {
+  margin-left: 1.6em;
+}
+
+.post-index__item:hover {
+  color: #444;
+}
+
+.post-index__item {
+  margin-bottom: 1em;
+  color: #aaa;
+}
+
+.post-index__item-timestamp {
+  float: right;
+}
+
 </style>
   </head>
   <body>
-    <div class="header">
-      <h1><a href="//">prehistoric.me</a></h1>
-      <div class="navigation">perihal / blogroll / <a href="#">RSS</a></div>
-    </div>
-    <div class="post-index">
-      <div class="post-index__item">
-        <div class="post-index__item-timestamp">
-          28-03-2017
-        </div>
-
-        <div class="post-index__item-title">
-          <a href="#">How to write a blog</a>
+    <div class="container">
+      <div class="header">
+        <h1><a href="//">prehistoric.me</a></h1>
+        <div class="navigation">
+          <a class="navigation__item" href="#">perihal</a>
+          <a class="navigation__item" href="#">kebijakan privasi</a>
+          <a class="navigation__item" href="#">blogroll</a>
+          <a class="navigation__item" href="#">rss feed</a>
         </div>
       </div>
-
-      <div class="post-index__item">
-        <div class="post-index__item-timestamp">
-          28-03-2017
+      <div class="post-index">
+        <div class="post-index__item">
+          <div class="post-index__item-timestamp">
+            28-03-2017
+          </div>
+  
+          <div class="post-index__item-title">
+            <a href="#">Post listed first</a>
+          </div>
         </div>
-
-        <div class="post-index__item-title">
-          <a href="#">Refresh Materialized View Concurrently akan Merusak Urutan</a>
+  
+        <div class="post-index__item">
+          <div class="post-index__item-timestamp">
+            28-03-2017
+          </div>
+  
+          <div class="post-index__item-title">
+            <a href="#">Second post in list</a>
+          </div>
         </div>
-      </div>
-
-      <div class="post-index__item">
-        <div class="post-index__item-timestamp">
-          28-03-2017
+  
+        <div class="post-index__item">
+          <div class="post-index__item-timestamp">
+            28-03-2017
+          </div>
+  
+          <div class="post-index__item-title">
+            <a href="#">Third post with longest line because we need to, can't resist. Lets see the result.</a>
+          </div>
         </div>
-
-        <div class="post-index__item-title">
-          <a href="#">Memulai Test Driven Development dengan Javascript dan Jasmine Spec</a>
-        </div>
-      </div>
-
-      <div class="post-index__item">
-        <div class="post-index__item-timestamp">
-          28-03-2017
-        </div>
-
-        <div class="post-index__item-title">
-          <a href="#">Membuat dan Menjalankan Linux dalam Container dengan systemd-nspawn</a>
+  
+        <div class="post-index__item">
+          <div class="post-index__item-timestamp">
+            28-03-2017
+          </div>
+  
+          <div class="post-index__item-title">
+            <a href="#">Hello!</a>
+          </div>
         </div>
       </div>
     </div>
