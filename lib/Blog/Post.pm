@@ -11,6 +11,7 @@ has 'created_at';
 has 'slug';
 has 'summary';
 has 'body';
+has 'url' => sub { 'https://prehistoric.me/' . shift->slug; };
 
 sub load_from_file
 {

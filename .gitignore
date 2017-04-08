@@ -1,2 +1,5 @@
 functions/
 node_modules/
+public/index.json
+public/**/*.html
+src/draft/*

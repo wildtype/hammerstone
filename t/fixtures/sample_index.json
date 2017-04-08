@@ -1,0 +1,18 @@
+[
+  {
+    "title":"Artikel Pertama",
+    "slug":"pertama",
+    "created_at":"31/03/2017, 22:26"
+  },
+  {
+    "title":"Artikel Kedua",
+    "slug":"kedua",
+    "created_at":"31/03/2017, 22:25"
+  },
+  {
+    "title":"Artikel Ketiga",
+    "slug":"ketiga",
+    "created_at":"31/03/2017, 22:27"
+  }
+]
+

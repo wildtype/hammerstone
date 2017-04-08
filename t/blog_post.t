@@ -20,6 +20,7 @@ is $subject->created_at, '28 Maret 2017, 11:32';
 is $subject->slug, 'tffp';
 is $subject->summary, 'this is summary';
 is $subject->body, 'this is body';
+is $subject->url, 'https://prehistoric.me/tffp';
 
 my $subject = Blog::Post->load_from_file(
   $base_path . '/fixtures/sample_file_without_summary.txt'
