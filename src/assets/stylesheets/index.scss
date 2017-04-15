@@ -40,7 +40,6 @@ a {
 .container {
   margin: 4em auto;
   max-width: 760px;
-  background-color: #fff;
 }
 
 .header {
@@ -99,5 +98,37 @@ a {
   &-item-shortlog {
     line-height: 140%;
     font-size: 80%;
+  }
+}
+
+.footer {
+  text-align: center;
+  padding-top: 2em;
+  margin: 2em 0;
+  border-top: 1px solid #eee;
+}
+
+h2 {
+  font-family: Georgia, serif;
+  line-height: 1.2em;
+  font-weight: 400;
+  padding-bottom: .4em;
+}
+
+li.blogroll__item {
+  display: inline;
+
+  &:after{
+    content: '\a0\b7\a0';
+  };
+
+  &:last-child:after {
+    content: '';
+  }
+}
+
+.blogroll-container {
+  p {
+    margin-bottom: 1em;
   }
 }
