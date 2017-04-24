@@ -4,9 +4,11 @@ use warnings;
 use Path::Tiny 'path';
 use Template::Semantic;
 use Cpanel::JSON::XS;
+use DateTime;
 use DateTime::Format::Strptime;
 use Blog::Post;
 use HTML::Packer;
+use XML::Feed;
 
 sub load_index
 {
@@ -62,6 +64,36 @@ sub sort_index
   return sort $sorter @{$index};
 }
 
+sub write_rss_feed
+{
+  my ($self, $filename, $data) = @_;
+  my $feed = XML::Feed->new('RSS', version => '2.0');
+
+  $feed->title('Prehistoric.Me');
+  $feed->tagline('Ya, aku bakal dibaca');
+  $feed->base('https://prehistoric.me/');
+  $feed->link('https://prehistoric.me/index.xml');
+  $feed->self_link('https://prehistoric.me/index.xml');
+  $feed->author('Mufti');
+  $feed->language('id');
+  $feed->generator('hammerstone');
+  $feed->modified(DateTime->now);
+
+  foreach my $item (@{$data}) {
+    my $entry = XML::Feed::Entry->new;
+    $entry->id('https://prehistoric.me/' . $item->{slug});
+    $entry->link('https://prehistoric.me/' . $item->{slug});
+    $entry->title($item->{title});
+    $entry->modified($item->{created_at_dt});
+    $entry->issued($item->{created_at_dt});
+    $entry->author('dev-null@prehistoric.me (Mufti)');
+    $feed->add_entry($entry);
+  }
+
+  my $rss_file = path($filename);
+  $rss_file->spew($feed->as_xml);
+}
+
 sub write_json_index
 {
   my ($self, $filename, $data) = @_;
@@ -112,6 +144,7 @@ sub render
 
   my @sorted_index = $self->sort_index($index);
   $self->render_index(\@sorted_index);
+  $self->write_rss_feed('../public/index.xml', \@sorted_index);
   $self->write_json_index('../public/index.json', \@sorted_index);
 }
 
