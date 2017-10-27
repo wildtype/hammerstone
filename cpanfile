@@ -1,8 +1,8 @@
-require 'Path::Tiny';
-require 'Object::Simple';
-require 'Cpanel::JSON::XS';
-require 'Template::Semantic';
-require 'HTML::Packer';
-require 'DateTime';
-require 'DateTime::Format::Strptime';
-require 'XML::Feed';
+requires 'Path::Tiny';
+requires 'Object::Simple';
+requires 'Cpanel::JSON::XS';
+requires 'Template::Semantic';
+requires 'HTML::Packer';
+requires 'DateTime';
+requires 'DateTime::Format::Strptime';
+requires 'XML::Feed';
