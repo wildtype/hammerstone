@@ -2,7 +2,8 @@
 package Blog;
 use strict;
 use warnings;
-use lib 'lib';
+use FindBin;
+use lib "$FindBin::Bin/lib";
 use Blog::Post;
 
 __PACKAGE__->run unless caller;
@@ -10,8 +11,10 @@ __PACKAGE__->run unless caller;
 sub run
 {
   my $self = shift;
-  my $ref  = $ARGV[0];
-  $self->$ref if $ref;
+  my $command  = $ARGV[0];
+  $self->$command and return if $self->can($command);
+
+  print STDERR "invalid command: $command\n" ;
 }
 
 sub publish

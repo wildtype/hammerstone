@@ -6,3 +6,4 @@ requires 'HTML::Packer';
 requires 'DateTime';
 requires 'DateTime::Format::Strptime';
 requires 'XML::Feed';
+requires 'IPC::Run';
