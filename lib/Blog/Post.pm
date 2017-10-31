@@ -30,11 +30,11 @@ sub load_from_file
   chomp $body if $body;
 
   return $klass->new(
-    title => $title,
+    title      => $title,
     created_at => $timestamp,
-    slug => $slug,
-    summary => $summary,
-    body => $body
+    slug       => $slug,
+    summary    => $summary,
+    body       => $body
   );
 }
 
@@ -46,10 +46,4 @@ sub _parse_metadata
   return ($title, $timestamp, $slug);
 }
 
-sub render_all
-{
-  my $self = shift;
-  Blog::Renderer::Post->render($self);
-  Blog::Renderer::Index->render($self);
-}
 1;

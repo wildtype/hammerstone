@@ -5,6 +5,8 @@ use warnings;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Blog::Post;
+use Blog::Renderer::Post;
+use Blog::Renderer::Index;
 
 __PACKAGE__->run unless caller;
 
@@ -19,11 +21,12 @@ sub run
 
 sub publish
 {
-  my $self = shift;
-  my $source  = $ARGV[1];
+  my $self   = shift;
+  my $source = $ARGV[1];
+  my $post   = Blog::Post->load_from_file($source);
 
-  Blog::Post->load_from_file($source)
-            ->render_all;
+  Blog::Renderer::Post->render($post);
+  Blog::Renderer::Index->render($post);
 }
 
 sub deploy
