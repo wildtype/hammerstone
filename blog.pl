@@ -5,7 +5,7 @@ use warnings;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Blog::Post;
-use Blog::Renderer::Post;
+use Blog::Post::Html;
 use Blog::Renderer::Index;
 
 __PACKAGE__->run unless caller;
@@ -25,7 +25,9 @@ sub publish
   my $source = $ARGV[1];
   my $post   = Blog::Post->load_from_file($source);
 
-  Blog::Renderer::Post->render($post);
+  Blog::Post::Html->new(blog_post => $post)
+                  ->write_file;
+
   Blog::Renderer::Index->render($post);
 }
 

@@ -1,13 +1,17 @@
-package Blog::Renderer::Post;
+package Blog::Post::Html;
 use strict;
 use warnings;
+use Object::Simple -base;
 use Path::Tiny 'path';
 use Template::Semantic;
 use HTML::Packer;
 
-sub render
+has 'blog_post';
+
+sub write_file
 {
-  my ($self, $blog_post) = @_;
+  my ($self) = @_;
+  my $blog_post = $self->blog_post;
   my $rendered_uncompressed = Template::Semantic->process('src/views/post.html', {
       'title' => $blog_post->title,
       '.post__title' => $blog_post->title,

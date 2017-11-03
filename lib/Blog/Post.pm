@@ -3,7 +3,6 @@ use strict;
 use warnings;
 use Object::Simple -base;
 use Path::Tiny;
-use Blog::Renderer::Post;
 use Blog::Renderer::Index;
 
 has 'title';
