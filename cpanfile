@@ -1,9 +1,5 @@
-requires 'Path::Tiny';
-requires 'Object::Simple';
-requires 'Cpanel::JSON::XS';
-requires 'Template::Semantic';
+requires 'Mojolicious';
+requires 'Text::WikiCreole';
+requires 'DateTime::Format::ISO8601';
 requires 'HTML::Packer';
-requires 'DateTime';
-requires 'DateTime::Format::Strptime';
-requires 'XML::Feed';
-requires 'IPC::Run';
+requires 'String::Util';

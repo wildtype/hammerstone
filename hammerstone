@@ -1,0 +1,149 @@
+#!/usr/bin/env perl
+# vi: ft=perl
+
+use strict;
+use warnings;
+use v5.10;
+use utf8;
+
+use Mojo::DOM;
+use Mojo::File 'path';
+
+use YAML;
+use Text::WikiCreole;
+use DateTime::Format::ISO8601;
+use Encode qw(encode_utf8 decode_utf8);
+use HTML::Packer;
+use String::Util 'trim';
+
+my $base = $ARGV[0] || '.';
+
+my $index_template = path($base . '/templates/index.html')->slurp;
+my $archive_template = path($base . '/templates/archive.html')->slurp;
+my $post_template =  path($base . '/templates/post.html')->slurp;
+my $minifier = HTML::Packer->init;
+my $mini_opts = { remove_newlines => 1 };
+
+my $plugin = sub {
+  my ($tag, $words) = split /\s+/, $_[0], 2;
+
+  if ($tag eq 'bq') {
+    return '<blockquote>'.trim(creole_parse($words)).'</blockquote>';
+  } elsif ($tag eq 'caption') {
+    return '<p class="image-caption">'.$words.'</p>';
+  }
+};
+
+creole_plugin($plugin);
+
+# load all posts
+my @posts = sort {
+  # sort posts by created_at descending
+  $b->{created_at}->compare($a->{created_at});
+} map {
+  my $file_content = path($_)->slurp;
+  my ($metadata, $excerpt,  $content) = Load($file_content);
+
+  # parse iso8601 datetime to DateTime object
+  # in timezone Asia/Jakarta and Bahasa Indonesia
+  my $created_at = DateTime::Format::ISO8601
+  ->parse_datetime($metadata->{created_at});
+  $created_at->set_locale('id-ID');
+  $created_at->set_time_zone('Asia/Jakarta');
+
+  my $post = $metadata;
+  $post->{created_at} = $created_at;
+  if (defined $content) {
+    $post->{content} = decode_utf8 creole_parse $content;
+    $post->{excerpt} = decode_utf8 creole_parse $excerpt;
+  } else {
+    $post->{content} = decode_utf8 creole_parse $excerpt;
+    $post->{excerpt} = undef;
+  }
+
+  $post;
+} glob($base . '/posts/*.yml');
+
+# cleanup public dir
+path('public')->remove_tree({keep_root => 1});
+
+# generate html pages for every post
+foreach my $post (@posts) {
+  my $post_dom = Mojo::DOM->new($post_template);
+
+  $post_dom->at('title')->content("$post->{title} | prehistoric.me");
+  $post_dom->at('.post__title')->content($post->{title});
+  $post_dom->at('.post__timestamp')->content(
+    $post->{created_at}->strftime('%d %B %Y')
+  );
+  $post_dom->at('.post__content')->content($post->{content});
+
+  path("$base/public/$post->{slug}")
+  ->make_path
+  ->child('index.html')
+  ->spurt(
+    encode_utf8 $minifier->minify(\$post_dom->to_string, $mini_opts)
+  );
+}
+
+# generate archive page
+my $archive_dom = Mojo::DOM->new($archive_template);
+my $list_item_template = $archive_dom->at('.post-list__item');
+my $post_list = $archive_dom->at('.post-list');
+$post_list->content('');
+
+foreach my $post (@posts) {
+  my $link = $list_item_template->at('.post-list__link');
+  $link->content($post->{title});
+  $link->attr(href => "/$post->{slug}/");
+
+  $list_item_template->at('.post-list__timestamp')->content(
+    $post->{created_at}->strftime('%d %B %Y')
+  );
+
+  $post_list->append_content($list_item_template);
+}
+
+path($base . '/public/archive')
+->make_path
+->child('index.html')
+->spurt(
+  encode_utf8 $minifier->minify(\$archive_dom->to_string, $mini_opts)
+);
+
+# generate index
+my $index_dom = Mojo::DOM->new($index_template);
+my $index_article_template = $index_dom->at('article');
+my $index_main = $index_dom->at('main');
+$index_main->content('');
+
+foreach my $post (@posts[0..4]) {
+  my $article = Mojo::DOM->new(
+    $index_article_template->to_string
+  );
+  my $url = "/$post->{slug}/";
+  my $link = $article->at('.post__link');
+
+  $link->content($post->{title});
+  $link->attr(href => $url);
+
+  $article->at('.post__timestamp')->content(
+    $post->{created_at}->strftime('%d %B %Y')
+  );
+
+  if (defined $post->{excerpt}) {
+    $article->at('.post__content')->content($post->{excerpt});
+    $article->append_content("<p><a href=\"$url\">Lanjutkan membaca &rarr;</a></p>");
+  } else {
+    $article->at('.post__content')->content($post->{content});
+  }
+
+  $article->append_content('<hr>');
+  $index_main->append_content($article);
+}
+
+path($base . '/public')
+->child('index.html')
+->spurt(
+  encode_utf8 $minifier->minify(\$index_dom->to_string, $mini_opts)
+);

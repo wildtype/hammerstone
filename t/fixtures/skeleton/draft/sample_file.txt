@@ -1,7 +1,0 @@
-Title for First Post
-28/03/2017, 11:32
-fixture_slug
----
-this is summary
----
-this is body
