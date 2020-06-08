@@ -16,38 +16,33 @@ use Encode qw(encode_utf8 decode_utf8);
 use HTML::Packer;
 use String::Util 'trim';
 
-my $base = $ARGV[0] || '.';
-
-my $index_template = path($base . '/templates/index.html')->slurp;
-my $archive_template = path($base . '/templates/archive.html')->slurp;
-my $post_template =  path($base . '/templates/post.html')->slurp;
 my $minifier = HTML::Packer->init;
 my $mini_opts = { remove_newlines => 1 };
 
-my $plugin = sub {
-  my ($tag, $words) = split /\s+/, $_[0], 2;
+sub Config {
+  my $site_name = 'prehistoric.me';
 
-  if ($tag eq 'bq') {
-    return '<blockquote>'.trim(creole_parse($words)).'</blockquote>';
-  } elsif ($tag eq 'caption') {
-    return '<p class="image-caption">'.$words.'</p>';
-  }
-};
+  {
+    SiteName => 'prehistoric.me',
 
-creole_plugin($plugin);
+    IndexTemplateFile => "$site_name/templates/index.html",
+    ArchiveTemplateFile => "$site_name/templates/archive.html",
+    PostTemplateFile => "$site_name/templates/post.html",
 
-# load all posts
-my @posts = sort {
-  # sort posts by created_at descending
-  $b->{created_at}->compare($a->{created_at});
-} map {
+    PostSrcGlob => "$site_name/posts/*.yml",
+    PostPath => sub { "$site_name/public/$_[0]" },
+
+    ArchivePath => "$site_name/public/archive",
+    IndexPath => "$site_name/public"
+  };
+}
+
+sub load_post_from_yaml {
   my $file_content = path($_)->slurp;
   my ($metadata, $excerpt,  $content) = Load($file_content);
 
-  # parse iso8601 datetime to DateTime object
-  # in timezone Asia/Jakarta and Bahasa Indonesia
   my $created_at = DateTime::Format::ISO8601
-  ->parse_datetime($metadata->{created_at});
+                     ->parse_datetime($metadata->{created_at});
   $created_at->set_locale('id-ID');
   $created_at->set_time_zone('Asia/Jakarta');
 
@@ -62,14 +57,15 @@ my @posts = sort {
   }
 
   $post;
-} glob($base . '/posts/*.yml');
+}
 
-# cleanup public dir
-path('public')->remove_tree({keep_root => 1});
+sub descending_created_at {
+  $b->{created_at}->compare($a->{created_at});
+}
 
-# generate html pages for every post
-foreach my $post (@posts) {
-  my $post_dom = Mojo::DOM->new($post_template);
+sub generate_post_html {
+  my ($template, $post) = @_;
+  my $post_dom = Mojo::DOM->new($template);
 
   $post_dom->at('title')->content("$post->{title} | prehistoric.me");
   $post_dom->at('.post__title')->content($post->{title});
@@ -78,7 +74,7 @@ foreach my $post (@posts) {
   );
   $post_dom->at('.post__content')->content($post->{content});
 
-  path("$base/public/$post->{slug}")
+  path(Config->{PostPath}->($post->{slug}))
   ->make_path
   ->child('index.html')
   ->spurt(
@@ -86,40 +82,27 @@ foreach my $post (@posts) {
   );
 }
 
-# generate archive page
-my $archive_dom = Mojo::DOM->new($archive_template);
-my $list_item_template = $archive_dom->at('.post-list__item');
-my $post_list = $archive_dom->at('.post-list');
-$post_list->content('');
+sub article_list_item {
+  my ($template, $post) = @_;
+  my $item = Mojo::DOM->new(
+    $template->to_string
+  );
 
-foreach my $post (@posts) {
-  my $link = $list_item_template->at('.post-list__link');
+  my $link = $item->at('.post-list__link');
   $link->content($post->{title});
   $link->attr(href => "/$post->{slug}/");
 
-  $list_item_template->at('.post-list__timestamp')->content(
+  $item->at('.post-list__timestamp')->content(
     $post->{created_at}->strftime('%d %B %Y')
   );
 
-  $post_list->append_content($list_item_template);
+  $item;
 }
 
-path($base . '/public/archive')
-->make_path
-->child('index.html')
-->spurt(
-  encode_utf8 $minifier->minify(\$archive_dom->to_string, $mini_opts)
-);
-
-# generate index
-my $index_dom = Mojo::DOM->new($index_template);
-my $index_article_template = $index_dom->at('article');
-my $index_main = $index_dom->at('main');
-$index_main->content('');
-
-foreach my $post (@posts[0..4]) {
+sub article_excerpt_for_index {
+  my ($template, $post) = @_;
   my $article = Mojo::DOM->new(
-    $index_article_template->to_string
+    $template->to_string
   );
   my $url = "/$post->{slug}/";
   my $link = $article->at('.post__link');
@@ -139,11 +122,94 @@ foreach my $post (@posts[0..4]) {
   }
 
   $article->append_content('<hr>');
-  $index_main->append_content($article);
+
+  $article;
 }
 
-path($base . '/public')
-->child('index.html')
-->spurt(
-  encode_utf8 $minifier->minify(\$index_dom->to_string, $mini_opts)
-);
+sub clean_public_dir {
+  path('public')->remove_tree({keep_root => 1});
+}
+
+sub load_all_posts {
+  sort descending_created_at map(
+    load_post_from_yaml,
+    glob(Config->{PostSrcGlob})
+  );
+}
+
+sub setup_creole_wiki_plugin {
+  my $plugin = sub {
+    my ($tag, $words) = split /\s+/, $_[0], 2;
+
+    if ($tag eq 'bq') {
+      return '<blockquote>'.trim(creole_parse($words)).'</blockquote>';
+    } elsif ($tag eq 'caption') {
+      return '<p class="image-caption">'.$words.'</p>';
+    }
+  };
+
+  creole_plugin($plugin);
+}
+
+sub write_archive_page {
+  my ($html) = @_;
+
+  path(
+    Config->{ArchivePath}
+  )->make_path->child('index.html')->spurt(
+    encode_utf8 $minifier->minify(\$html, $mini_opts)
+  );
+}
+
+sub write_index_page {
+  my ($html) = @_;
+
+  path(
+    Config->{IndexPath}
+  )->child('index.html')->spurt(
+    encode_utf8 $minifier->minify(\$html, $mini_opts)
+  );
+}
+
+setup_creole_wiki_plugin;
+clean_public_dir;
+
+my @posts = load_all_posts;
+
+my $post_template =  path(
+  Config->{PostTemplateFile}
+)->slurp;
+
+my $archive_template = path(
+  Config->{ArchiveTemplateFile}
+)->slurp;
+
+my $index_template = path(
+  Config->{IndexTemplateFile}
+)->slurp;
+
+my $archive_dom = Mojo::DOM->new($archive_template);
+my $list_item_template = $archive_dom->at('.post-list__item');
+my $post_list = $archive_dom->at('.post-list');
+
+my $index_dom = Mojo::DOM->new($index_template);
+my $index_article_template = $index_dom->at('article');
+my $index_main = $index_dom->at('main');
+
+$index_main->content('');
+$post_list->content('');
+
+foreach my $post (@posts) {
+  generate_post_html($post_template, $post);
+
+  $post_list->append_content(
+    article_list_item($list_item_template, $post)
+  );
+
+  $index_main->append_content(
+    article_excerpt_for_index($index_article_template, $post)
+  );
+}
+
+write_archive_page($archive_dom->to_string);
+write_index_page($index_dom->to_string);
