@@ -33,7 +33,12 @@ sub Config {
     PostPath => sub { "$site_name/public/$_[0]" },
 
     ArchivePath => "$site_name/public/archive",
-    IndexPath => "$site_name/public"
+    IndexPath => "$site_name/public",
+
+    Statics => {
+      about => "$site_name/templates/about.html",
+      blogroll => "$site_name/templates/blogroll.html"
+    }
   };
 }
 
@@ -171,8 +176,23 @@ sub write_index_page {
   );
 }
 
+sub copy_static_pages {
+  foreach my $page (keys %{Config->{Statics}}) {
+    path(
+      Config->{IndexPath} . "/$page"
+    )->make_path;
+
+    path(
+      Config->{Statics}->{$page}
+    )->copy_to(
+      Config->{IndexPath} . "/$page/index.html"
+    );
+  }
+}
+
 setup_creole_wiki_plugin;
 clean_public_dir;
+copy_static_pages;
 
 my @posts = load_all_posts;
 
