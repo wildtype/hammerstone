@@ -1,0 +1,75 @@
+title: Memilih-acak Blogroll
+slug: mengacak-blogroll
+created_at: 2017-04-22T10:25:45+07:00
+--- |-
+Beberapa hari yang lalu saya mengubah tampilan situs ini supaya tampak seperti blog. Sekedar mengikuti tren, saya juga menambahkan halaman [[/blogroll|blogroll]]. Di halaman blogroll ada link random yang ketika di-klik, pengunjung akan dibawa ke situs blog milik kawan secara acak. Saya sendiri suka mengkliknya untuk sekedar berkunjung entah kemana.
+
+Daftar link blogroll berupa struktur HTML seperti berikut:
+--- |-
+Beberapa hari yang lalu saya mengubah tampilan situs ini supaya tampak seperti blog. Sekedar mengikuti tren, saya juga menambahkan halaman [[/blogroll|blogroll]]. Di halaman blogroll ada link random yang ketika di-klik, pengunjung akan dibawa ke situs blog milik kawan secara acak. Saya sendiri suka mengkliknya untuk sekedar berkunjung entah kemana.
+
+Daftar link blogroll berupa struktur HTML seperti berikut:
+
+{{{
+<a href="#random" class="blogroll-random">Klik disini</a>
+<ul class="blogroll-list">
+  <li class="blogroll-list__item">
+    <a href="alamat/blog/pertama" class="blogroll-list__item-link">blog pertama</a>
+  </li>
+  <li class="blogroll-list__item">
+    <a href="alamat/blog/kedua" class="blogroll-list__item-link">blog kedua</a>
+  </li>
+</ul>
+}}}
+
+Menggunakan javascript, DOM semua link diambil dengan fungsi {{{document.querySelectorAll()}}}. Fungsi tersebut menerima css selector sebagai argumen, mengambil semua DOM yang cocok dan menyimpannya ke dalam array. Link random (“Klik disini”) juga diambil dengan fungsi {{{document.querySelector()}}}, fungsinya mirip tapi hanya mengambil satu elemen saja.
+
+{{{
+var linkList = document.querySelectorAll('.blogroll-list__item-link'),
+    randomLink = document.querySelector('.blogroll-random');
+}}}
+
+Diantara daftar link blogroll, dipilih satu secara acak:
+
+{{{
+var chosenLink = linkList[Math.floor(Math.random() * linkList.length)];
+}}}
+
+{{{Math.random()}}} menghasilkan bilangan acak diantara 0 sampai 1, tanpa termasuk 0 dan 1. Jadi nilai maksimal yang didapat dari {{{Math.random() * linkList.length}}} adalah sedikit lebih kecil daripada jumlah link blogroll. Sementara itu, indeks array pada javascript dimulai dari 0 sampai {{{panjang_array - 1}}}. Dengan {{{Math.floor()}}}, angka acak tadi akan dibulatkan ke bawah, jadi rentang nilainya antara 0 sampai {{{panjang_array - 1}}}.
+
+Dari link terpilih tadi, diambil alamat linknya. Alamat link tersebut diset ke dalam link random:
+
+{{{
+randomLink.href = chosenLink.href;
+}}}
+
+Supaya alamat link dipilih ulang dan berubah setiap kali diklik, proses tersebut perlu dijalankan saat {{{randomLink}}} menerima event //mousedown//. Event mousedown terjadi ketika tombol mouse mulai ditekan, separuh dari proses klik. 
+
+{{{
+randomLink.addEventListener('mousedown', function() {
+  var chosenLink = linkList[Math.floor(Math.random() * linkList.length)];
+  randomLink.href = chosenLink.href;
+});
+}}}
+
+Script tersebut diatas digabungkan menjadi satu dalam [[https://en.wikipedia.org/wiki/Immediately-invoked_function_expression|immediately-invoked]] function supaya selalu dijalankan setelah dokumen siap.
+
+{{{
++function() {
+  var linkList = document.querySelectorAll('.blogroll-list__item-link'),
+    randomLink = document.querySelector('.blogroll-random');
+
+  randomLink.addEventListener('mousedown', function() {
+    var chosenLink = linkList[Math.floor(Math.random() * linkList.length)];
+    randomLink.href = chosenLink.href;
+  });
+}();
+}}}
+
+Selain halaman [[/blogroll|blogroll]], demo lebih jelasnya bisa dilihat [[http://jsbin.com/goxaqamusi/2/edit?html,js,output|disini]]. Berikut ini bacaan lanjut tentang berbagai fungsi yang dipakai:
+
+* [[https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector|document.querySelector]]
+* [[https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll|document.querySelectorAll]]
+* [[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random|Math.random]]
+* [[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/floor|Math.floor]]
+* [[https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener|addEventListener]]

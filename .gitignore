@@ -1,6 +1,2 @@
-functions/
-node_modules/
-public/index.json
-public/**/*.html
-src/draft/*
-public/assets/stylesheets/*
+**/node_modules/
+/*/public/

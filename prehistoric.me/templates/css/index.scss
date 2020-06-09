@@ -1,0 +1,42 @@
+@import '@exampledev/new.css';
+
+h1>a, h2>a {
+  color: #333;
+  text-decoration:none;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+p.image-caption{
+  margin-top:-1em;
+  font-size:.85em;
+  text-align:center;
+  color:#555;
+}
+
+p>img{
+  margin-bottom:0;
+}
+
+ul.blogroll__list{
+  padding:0;
+}
+
+li.blogroll__item {
+  display:inline;
+  list-style-type:none;
+
+  &:after {
+    content:'\a0\b7\a0';
+  }
+}
+
+a {
+  color: #004da8;
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+}

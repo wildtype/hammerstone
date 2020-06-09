@@ -1,0 +1,41 @@
+title: 2019: Dari Birdwatching, Nonton Festival Musik, sampai Bicara di Rubyconf
+slug: 2019
+created_at: 2019-12-31T23:51:04+07:00
+--- |-
+<<bq Januari mengeras di tembok itu juga, lalu Desember..\\
+-- Sapardi, Buat ning>>
+
+Postingan wajib dilengkapi dengan kutipan klise, karena sepertinya blog ini cuma diisi pada awal dan akhir tahun. Tahun 2019 ini lumayan seru buat saya, seperti kebanyakan orang dan di tahun-tahun lainnya, saya melakukan dan mendapat berbagai pengalaman baru.
+--- |-
+<<bq Januari mengeras di tembok itu juga, lalu Desember..\\
+-- Sapardi, Buat ning>>
+
+Postingan wajib dilengkapi dengan kutipan klise, karena sepertinya blog ini cuma diisi pada awal dan akhir tahun. Tahun 2019 ini lumayan seru buat saya, seperti kebanyakan orang dan di tahun-tahun lainnya, saya melakukan dan mendapat berbagai pengalaman baru.
+
+Akhir Januari 2019, saya ikut pengamatan burung di Pulau Rambut yang diadakan oleh Burung Indonesia dalam rangka Asian Waterbird Census. Kegiatan ini jadi trigger yang mempengaruhi pola kegiatan saya di akhir pekan sepanjang 2019. Kalau di 2018 saya suka [[/motret|bersepeda dan memotret]], sepanjang tahun kemarin saya jadi sangat jarang sepedaan dan lebih sering birdwatching.
+
+Birdwatching bukan kegiatan baru buat saya, tetapi di tahun-tahun sebelumnya saya hampir tidak pernah mengamat sejak bekerja. Padahal saya sempat membeli teropong binokular yang lumayan bagus dan sempat memperhatikan beberapa tempat mengamat di Jakarta. Setelah ikut AWC 2019, saya merasakan lagi asiknya mengamat burung sampai kemudian membeli lensa tele.
+
+{{https://prehistoric.me/wp-content/uploads/2019/12/IMG_20190726_204530_044-768x514.jpg}}
+
+<<caption Burung jalak kerbau (<em>Acridotheres javanicus</em>). Difoto di pepohonan kandang gorilla, Kebun Binatang Ragunan.>>
+
+Adanya kamera dengan lensa tele ini membuat kegiatan birdwatching jadi terasa lebih rewarding karena ada hasilnya yang bisa dipamerkan. Saya pun mulai sering jalan-jalan buat mengamat burung. Bisa dibilang, hampir tiap akhir pekan pikiran saya adalah “mau ngamat di mana hari ini?”, meskipun akhirnya di situ-situ juga: atap kosan, Monas, atau paling jauh di Kebun Raya Bogor. Ketika mudik ke Jogja pun, kegiatan saya jadi mengamat burung juga kalau nggak berkumpul bersama keluarga.
+
+{{https://prehistoric.me/wp-content/uploads/2019/12/IMG_20191221_205452-768x432.jpg}}
+
+<<caption Burung-madu sriganti (<em>Nectarinia jugularis</em>). Difoto di pohon nangka depan rumah, di Prambanan.>>
+
+Bukan cuma memotret burung, saya juga masih suka foto-foto di acara konser musik. Beberapa kali ada festival musik saya tonton. Entah bagaimana band yang paling banyak saya tonton adalah Mocca, dan kebetulan menurut spotify jadi artis yang paling banyak saya mainkan lagunya.
+
+Dari mengikuti akun media sosial band dan acara musik, saya jadi penasaran dan menonton pertunjukan seni lainnya seperti pentas teater, pameran seni rupa, wayang, sampai orkestra dan pentas tari balet. Perlu diakui kalau saya menonton pertunjukan dan pameran itu cuma sok edgy, nggak paham apa-apa. Tapi ngga apalah, buat pengalaman tambahan, biar bisa jawab "gw udah pernah" kalau sedang ngobrol tentang hal-hal tersebut.
+
+{{https://prehistoric.me/wp-content/uploads/2019/12/IMG_20191231_234344.jpg}}
+
+<<caption Arina, vokalis Mocca, sedang di panggung bersama Asteriska, salah satu vokalis Barasuara. Difoto di acara Kaskus HobbyGround.>>
+
+Meskipun akhir pekan banyak mengamat burung atau pura-pura edgy, kadang-kadang saya konkow juga dengan teman-teman. Pada suatu akhir pekan ketika nongkrong, muncullah obrolan mengenai internet yang diblokir, proxy, DoH, sampai cara kerja HTTP. Dari obrolan itu saya jadi dapat ide bahan untuk bicara di [[https://ruby.id/conf/2019/index.html|RubyConf Indonesia 2019]] dan ternyata diterima. Ini pertama kalinya saya jadi pembicara dalam konferensi.
+
+Di konferensi itu saya membahas tentang cara kerja server DoH dengan mengimplementasikannya dalam bahasa Ruby. Saya akui penjelasan ketika sedang bicara di koferensi masih kurang bagus, tapi saya jadi banyak belajar ketika mempersiapkan bahan pembicaraan, dari pemrograman socket, HTTP, sampai cara kerja dan bentuk request DNS.
+
+Untuk 2020, rencana saya masih melanjutkan saja hoby selama 2019 lalu, berharap bisa melakukannya dengan kuantitas dan kualitas yang lebih baik.

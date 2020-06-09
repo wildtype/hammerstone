@@ -1,0 +1,600 @@
+title: Memulai Test Driven Development dengan Javascript dan Jasmine
+created_at: 2016-10-15T14:45:15+07:00
+slug: tdd-jasmine-intro
+--- |-
+=== Pengantar
+Sebenarnya sudah lama ingin menulis tentang Jasmine. Rasanya tidak tepat jika tiba-tiba membahas berbagai hal tentang Jasmine tanpa pernah memperkenalkan TDD, mengingat belum banyak literatur TDD dalam Bahasa Indonesia, tetapi saya sendiri kebingungan bagaimana memperkenalkannya secara mudah. Kemudian saya menonton video [[https://www.youtube.com/watch?v=EQ4sN8fgXKY|[LD] Code Kata – FizzBuzz | Let’s Develop]]. Video tersebut memperkenalkan TDD dengan baik, sebagian tulisan ini merupakan adaptasi yang diimplementasikan dengan Javascript dan Jasmine.
+--- |-
+=== Pengantar
+
+Sebenarnya sudah lama ingin menulis tentang Jasmine. Rasanya tidak tepat jika tiba-tiba membahas berbagai hal tentang Jasmine tanpa pernah memperkenalkan TDD, mengingat belum banyak literatur TDD dalam Bahasa Indonesia, tetapi saya sendiri kebingungan bagaimana memperkenalkannya secara mudah. Kemudian saya menonton video [[https://www.youtube.com/watch?v=EQ4sN8fgXKY|[LD] Code Kata – FizzBuzz | Let’s Develop]]. Video tersebut memperkenalkan TDD dengan baik, sebagian tulisan ini merupakan adaptasi yang diimplementasikan dengan Javascript dan Jasmine.
+
+Dalam Test Driven Development, software dikembangkan dengan iterasi pendek dimana programmer menerjemahkan spesifikasi software menjadi test yang sederhana, dilanjutkan dengan penulisan kode sesederhana mungkin untuk meluluskan test tersebut. Kode yang telah lulus test kemudian diperbaiki serapi mungkin. Siklus diulang sampai software memenuhi seluruh spesifikasi yang diminta. Proses ini sering disebut “Red, Green, Refactor” yang menjadi motto TDD.
+
+Jasmine adalah test framework untuk javascript yang bergaya behavior-driven, mirip dengan RSpec di bahasa ruby. Perbedaan dengan testing framework biasa adalah test ditulis dengan tata bahasa yang mirip dengan spesifikasi. Spesifikasi/spec menjelaskan kondisi-kondisi yang sedang diuji dan ekspektasi yang dihasilkan oleh unit ketika dijalankan.
+
+Versi terbaru Jasmine dapat didownload dari halaman rilisnya di Github: [[https://github.com/jasmine/jasmine/releasesa]]/. Dalam tulisan ini kita hanya cukup menggunakan distribusi //jasmine-standalone//. Di dalam paket tersebut terdapat folder {{{lib}}} yang berisi kode sumber jasmine dan tidak akan kita sentuh, {{{src}}} yang akan menjadi tempat meletakkan kode sumber software kita, {{{spec}}} yang akan kita isi dengan kode sumber test, dan {{{SpecRunner.html}}} yang akan menjalankan test kita di browser.
+
+=== Test Driven FizzBuzz
+
+Disini kita akan menyelesaikan contoh pemrograman klasik //fizzBuzz// dalam javascript, dituntun oleh test. Spesifikasi fungsi //fizzBuzz// yang akan kita buat adalah sebagai berikut:
+
+# Fungsi fizzBuzz menerima parameter angka bulat n
+# Jika n habis dibagi 3, maka fungsi fizzBuzz bernilai “Fizz”
+# Jika n habis dibagi 5, maka fungsi fizzBuzz bernilai “Buzz”
+# Jika n habis dibagi 3 dan 5, maka fungsi fizzBuzz bernilai “FizzBuzz”
+# Selain itu maka fungsi fizzBuzz bernilai string angka n
+
+Untuk memulai, kita perlu mengubah isi file SpecRunner.html menjadi seperti berikut:
+
+{{{
+<!DOCTYPE html>
+<html>
+<head>
+ ... skip ...
+  <!-- include source files here... -->
+  <script src="src/fizz_buzz.js"></script>
+
+  <!-- include spec files here... -->
+  <script src="spec/fizz_buzz_spec.js"></script>
+
+</head>
+... skip ...
+}}}
+
+Di situ bagian source files diubah menjadi {{{src/fizz_buzz.js}}} yang merupakan implementasi fizzBuzz kita, dan spec files menjadi {{{spec/fizz_buzz_spec.js}}} yang merupakan kode specnya. Kemudian, file {{{SpecRunner.html}}} tersebut dibuka dengan browser, hasilnya adalah tampilan “No specs found”, karena memang spec belum ditulis.
+
+Kita bisa mulai menulis test/spec yang diperlukan. Kondisi pertama yang paling mudah adalah jika n tidak habis dibagi 3 maupun 5, makan akan mengembalikan string nilai n itu sendiri. Artinya, jika dipanggil {{{fizzBuzz(1)}}} akan dihasilkan "1". Spesifikasi ditulis seperti berikut dalam file {{{spec/fizz_buzz_spec.js}}}:
+
+{{{
+describe('fizzBuzz', function() {
+  describe('jika n adalah 1', function() {
+    it('seharusnya menghasilkan "1"', function() {
+      expect(fizzBuzz(1)).toEqual("1");
+    });
+  });
+});
+}}}
+
+Jika file SpecRunner.html dimuat ulang di browser, akan tampil galat
+
+{{{
+fizzBuzz jika n adalah 1 seharusnya menghasilkan "1"
+ReferenceError: fizzBuzz is not defined in file:///lokasi/file/jasmine/spec/fizz_buzz_spec.js (line 4)
+
+...dst...
+}}}
+
+Tentu saja, karena kita belum mengimplementasikan fungsi fizzBuzz, bahkan filenya pun belum ada. Munculnya galat ini adalah bagian penting dan akan berdosa jika kita tidak melihat atau mengeceknya. Galat ini akan menjadi bukti bahwa test framework dapat bekerja dan test yang kita tulis juga berjalan. Inilah tahap Red dalam siklus “Red/Green/Refactor”.
+
+Kode untuk meluluskan test tersebut, ditulis di dalam file {{{src/fizz_buzz.js}}}:
+
+{{{
+function fizzBuzz() {
+  return "1";
+}
+}}}
+
+Ketika file SpecRunner dimuat ulang, kita akan mendapati pesan berwarna hijau:
+
+{{{
+1 spec, 0 failures
+    fizzBuzz
+        jika n adalah 1
+            seharusnya menghasilkan "1"
+}}}
+
+Nah kita berhasil lulus ujian pertama dengan kode yang sangat sederhana. Inilah “Green”. Karena masih sederhana, kode tersebut belum perlu direfaktor. Kita bisa maju ke ujian selanjutnya. Bilangan 2 juga tidak habis dibagi 3 maupun 5, sehingga diharapkan pemanggilan fizzBuzz(2) akan menghasilkan "2". Spec ditambahkan menjadi seperti berikut:
+
+{{{
+describe('fizzBuzz', function() {
+  describe('jika n adalah 1', function() {
+    it('seharusnya menghasilkan "1"', function() {
+      expect(fizzBuzz(1)).toEqual("1");
+    });
+  });
+
+  describe('jika n adalah 2', function() {
+    it('seharusnya menghasilkan "2"', function() {
+      expect(fizzBuzz(2)).toEqual("2");
+    });
+  });
+});
+}}}
+
+Jika dimuat ulang, SpecRunner akan menampilkan pesan merah
+
+{{{
+2 specs, 1 failure
+Spec List | Failures
+fizzBuzz jika n adalah 2 seharusnya menghasilkan "2"
+Expected '1' to equal '2'.
+}}}
+
+Menunjukkan bahwa implementasi kita belum lulus untuk kasus ke dua. Kode implementasi diperbaiki menjadi seperti berikut:
+
+{{{
+function fizzBuzz(n) {
+  return n.toString();
+}
+}}}
+
+fungsi fizzBuzz sudah dapat menerima parameter n, dan mengembalikan nilai n.toString().
+
+Muat ulang lagi SpecRunner, akan didapati pesan hijau:
+
+{{{
+2 specs, 0 failures
+
+    fizzBuzz
+        jika n adalah 1
+            seharusnya menghasilkan "1"
+        jika n adalah 2
+            seharusnya menghasilkan "2"
+}}}
+
+Implementasi kita sudah lulus untuk kedua kasus. Kode masih cukup sederhana dan belum perlu refaktor. Kita memasuki kasus berikutnya, yaitu angka 3 yang merupakan angka yang habis dibagi 3, sehingga seharusnya fizzBuzz(3)menghasilkan nilai "Fizz". Spec ditambahkan seperti berikut:
+
+{{{
+describe('fizzBuzz', function() {
+  describe('jika n adalah 1', function() {
+    it('seharusnya menghasilkan "1"', function() {
+      expect(fizzBuzz(1)).toEqual("1");
+    });
+  });
+
+  describe('jika n adalah 2', function() {
+    it('seharusnya menghasilkan "2"', function() {
+      expect(fizzBuzz(2)).toEqual("2");
+    });
+  });
+
+  describe('jika n adalah 3', function() {
+    it('seharusnya menghasilkan "Fizz"', function() {
+      expect(fizzBuzz(3)).toEqual("Fizz");
+    });
+  });
+});
+}}}
+
+SpecRunner akan menampilkan pesan merah jika dimuat ulang:
+
+{{{
+3 specs, 1 failure
+Spec List | Failures
+fizzBuzz jika n adalah 3 seharusnya menghasilkan "3"
+Expected '3' to equal 'Fizz'.
+}}}
+
+Lagi-lagi, implementasi perlu diperbaiki. Kita mulai perlu menggunakan logika/kondisional di sini.
+
+{{{
+function fizzBuzz(n) {
+  if(n == 3) return "Fizz";
+  return n.toString();
+}
+}}}
+
+Jalankan SpecRunner lagi, akan didapati pesan hijau yang membuktikan kebenaran implementasi kita:
+
+{{{
+3 specs, 0 failures
+
+    fizzBuzz
+        jika n adalah 1
+            seharusnya menghasilkan "1"
+        jika n adalah 2
+            seharusnya menghasilkan "2"
+        jika n adalah 3
+            seharusnya menghasilkan "Fizz"
+}}}
+
+Dilanjutkan lagi, bilangan lain yang habis dibagi 3 adalah 6, diharapkan pemanggilan fizzBuzz(6) akan menghasilkan "Fizz" juga, Spec kita tambah:
+
+{{{
+describe('fizzBuzz', function() {
+  describe('jika n adalah 1', function() {
+    it('seharusnya menghasilkan "1"', function() {
+      expect(fizzBuzz(1)).toEqual("1");
+    });
+  });
+
+  describe('jika n adalah 2', function() {
+    it('seharusnya menghasilkan "2"', function() {
+      expect(fizzBuzz(2)).toEqual("2");
+    });
+  });
+
+  describe('jika n adalah 3', function() {
+    it('seharusnya menghasilkan "Fizz"', function() {
+      expect(fizzBuzz(3)).toEqual("Fizz");
+    });
+  });
+
+  describe('jika n adalah 6', function() {
+    it('seharusnya menghasilkan "Fizz"', function() {
+      expect(fizzBuzz(6)).toEqual("Fizz");
+    });
+  });
+});
+}}}
+
+Seperti yang sudah diduga, SpecRunner pasti akan menunjukkan gagalnya test kita ketika dimuat ulang:
+
+{{{
+4 specs, 1 failure
+Spec List | Failures
+fizzBuzz jika n adalah 6 seharusnya menghasilkan "Fizz"
+Expected '6' to equal 'Fizz'.
+}}}
+
+Implementasi diperbaiki kembali, karena 6 dan juga 3 habis dibagi 3, keduanya bisa menghasilkan “Fizz” dengan cara yang sama, yaitu dengan menguji apakah angka input habis dibagi 3 (//yeah, obviously//):
+
+{{{
+function fizzBuzz(n) {
+  if(n % 3 == 0) return "Fizz";
+  return n.toString();
+}
+}}}
+
+Seperti harapan, implementasi ini akan lulus:
+
+{{{
+4 specs, 0 failures
+
+    fizzBuzz
+        jika n adalah 1
+            seharusnya menghasilkan "1"
+        jika n adalah 2
+            seharusnya menghasilkan "2"
+        jika n adalah 3
+            seharusnya menghasilkan "Fizz"
+        jika n adalah 6
+            seharusnya menghasilkan "Fizz"
+}}}
+
+Kita maju ke tahap berikutnya, yaitu jika n adalah 5, bilangan terkecil yang habis dibagi 5, seharusnya menghasilkan "Buzz":
+
+//(spec lengkap tidak dicantumkan untuk menghemat tempat)//
+
+{{{
+describe('jika n adalah 5', function() {
+  it('seharusnya menghasilkan "Buzz"', function() {
+    expect(fizzBuzz(5)).toEqual("Buzz");
+  });
+});
+}}}
+
+Seperti sebelumnya, SpecRunner akan menampilkan gagal nya test tersebut:
+
+{{{
+5 specs, 1 failure
+Spec List | Failures
+fizzBuzz jika n adalah 5 seharusnya menghasilkan "Buzz"
+Expected '5' to equal 'Buzz'.
+}}}
+
+Mari kita perbaiki implementasi fizzBuzz sehingga sesuai harapan:
+
+{{{
+function fizzBuzz(n) {
+  if(n % 3 == 0) return "Fizz";
+  if(n == 5) return "Buzz";
+  return n.toString();
+}
+}}}
+
+Muat ulang SpecRunner, implementasi kita kembali ke dalam kondisi hijau dan lulus semua test.
+
+{{{
+5 specs, 0 failures
+
+    fizzBuzz
+        jika n adalah 1
+            seharusnya menghasilkan "1"
+        jika n adalah 2
+            seharusnya menghasilkan "2"
+        jika n adalah 3
+            seharusnya menghasilkan "Fizz"
+        jika n adalah 6
+            seharusnya menghasilkan "Fizz"
+        jika n adalah 5
+            seharusnya menghasilkan "Buzz"
+}}}
+
+Jika diperhatikan kembali implementasi kita, disana terdapat 3 kali statement return. Kita bisa memperbaikinya dengan menyimpan nilai hasil sementara, kemudian baru memanggil statemen return di akhir saja. Kode implementasi direfaktor seperti berikut:
+
+{{{
+function fizzBuzz(n) {
+  var returnValue = n.toString();
+
+  if(n % 3 == 0) returnValue =  "Fizz";
+  if(n == 5) returnValue =  "Buzz";
+
+  return returnValue;
+}
+}}}
+
+Kita baru saja menjalani tahap “Refactor” dalam siklus “Red/Green/Refactor”. Jika dimuat ulang lagi SpecRunner, seharusnya kita masih mendapati pesan hijau yang sama. Inilah salah satu keuntungan dari Test Driven Development, kemudahan dan perasaan aman dalam melakukan refaktor. //Yeah//.
+
+Bilangan berikutnya yang habis dibagi 5 adalah 10, fizzBuzz(10) akan menghasilkan "Buzz" juga.
+
+{{{
+describe('jika n adalah 10', function() {
+  it('seharusnya menghasilkan "Buzz"', function() {
+    expect(fizzBuzz(10)).toEqual("Buzz");
+  });
+});
+}}}
+
+Lagi dan lagi, kita mendapati pesan merah saat memuat ulang SpecRunner:
+
+{{{
+6 specs, 1 failure
+Spec List | Failures
+fizzBuzz jika n adalah 10 seharusnya menghasilkan "Buzz"
+Expected '10' to equal 'Buzz'.
+}}}
+
+Seperti sebelumnya, 5 dan 10 sama-sama habis dibagi 5, untuk meluluskan test tersebut, kita mulai perlu mengecek apakah n habis dibagi 5. Implementasi kita perbaiki kembali:
+
+{{{
+function fizzBuzz(n) {
+  var returnValue = n.toString();
+
+  if(n % 3 == 0) returnValue =  "Fizz";
+  if(n % 5 == 0) returnValue =  "Buzz";
+
+  return returnValue;
+}
+}}}
+
+
+Sesuai harapan, implementasi kita sudah lulus untuk kasus n = 1,2,3,6,5, dan 10.
+
+{{{
+6 specs, 0 failures
+
+    fizzBuzz
+        jika n adalah 1
+            seharusnya menghasilkan "1"
+        jika n adalah 2
+            seharusnya menghasilkan "2"
+        jika n adalah 3
+            seharusnya menghasilkan "Fizz"
+        jika n adalah 6
+            seharusnya menghasilkan "Fizz"
+        jika n adalah 5
+            seharusnya menghasilkan "Buzz"
+        jika n adalah 10
+            seharusnya menghasilkan "Buzz"
+}}}
+
+
+Mari istiahat sejenak dari iterasi sambil berbincang. Di atas, saya tidak bosan mengulang-ulang penampilan SpecRunner setiap kali selesai menulis spec maupun implementasi. Implementasinya pun sangat naif dan berputar-putar. Saya harap anda pun tidak bosan, atau setidaknya bisa menahan bosan.
+
+Membuat test yang sederhana, melihat test tersebut gagal, kemudian menulis implementasi yang sangat naif untuk meluluskan test tersebut adalah langkah yang sangat penting. Dalam perjalanan, ketika menulis software yang lebih besar dan rumit, sering kali kita akan tergoda untuk melewatkan test yang sangat sederhana, atau menulis test kemudian langsung membuat implementasinya tanpa melihat test yang gagal. Kadang hal ini tidak apa-apa, malah lebih cepat selesai. Tetapi sering kali bug dalam software muncul karena proses penulisan test yang tidak hati-hati. Test yang bertele-tele dan sederhana akan membantu kita dalam memikirkan berbagai kondisi yang terjadi pada kode sehingga bisa menghindari bug.
+
+Tulisan ini ditujukan untuk pemula dalam Test Driven Development. Bisa dibilang proses yang diulang-ulang ini merupakan indoktrinasi dogma TDD, agar programmer menjadi terbiasa dengan siklus “Red/Green/Refactor”. Pada akhirnya ketika software selesai diimplementasikan secara lengkap, test/spec yang bertele-tele bisa direfactor juga supaya lebih lugas.
+
+Kita lanjutkan kembali perjalanan menuju fizzBuzz. Kondisi berikutnya, yaitu jika nhabis dibagi 3 dan 5. Bilangan terkecil yang habis dibagi 3 dan 5 adalah 15, jadi kita harapkan fizzBuzz(15) akan menghasilkan "FizzBuzz". Spec ditambahkan:
+
+{{{
+describe('jika n adalah 15', function() {
+  it('seharusnya menghasilkan "FizzBuzz"', function() {
+    expect(fizzBuzz(15)).toEqual("FizzBuzz");
+  });
+});
+}}}
+
+Lagi dan lagi, SpecRunner akan menampilkan pesan merah jika dimuat ulang:
+
+{{{
+7 specs, 1 failure
+Spec List | Failures
+fizzBuzz jika n adalah 15 seharusnya menghasilkan "FizzBuzz"
+Expected 'Buzz' to equal 'FizzBuzz'.
+}}}
+
+Kembali kita perbaiki implementasi fizzBuzz:
+
+{{{
+function fizzBuzz(n) {
+  var returnValue = n.toString();
+
+  if(n % 3 == 0) returnValue =  "Fizz";
+  if(n % 5 == 0) returnValue =  "Buzz";
+  if(n == 15) returnValue = "FizzBuzz";
+
+  return returnValue;
+}
+}}}
+
+Muat ulang lagi SpecRunner, tampaklah bahwa implementasi kita sudah bisa menghasilkan FizzBuzz juga inputnya 15
+
+{{{
+7 specs, 0 failures
+
+    fizzBuzz
+        jika n adalah 1
+            seharusnya menghasilkan "1"
+        jika n adalah 2
+            seharusnya menghasilkan "2"
+        jika n adalah 3
+            seharusnya menghasilkan "Fizz"
+        jika n adalah 6
+            seharusnya menghasilkan "Fizz"
+        jika n adalah 5
+            seharusnya menghasilkan "Buzz"
+        jika n adalah 10
+            seharusnya menghasilkan "Buzz"
+        jika n adalah 15
+            seharusnya menghasilkan "FizzBuzz"
+}}}
+
+Kita lanjutkan kembali, bilangan yang habis dibagi 3 dan 5 setelah 15 adalah 30.
+
+{{{
+describe('jika n adalah 30', function() {
+  it('seharusnya menghasilkan "FizzBuzz"', function() {
+    expect(fizzBuzz(30)).toEqual("FizzBuzz");
+  });
+});
+}}}
+
+Kembali kita menghadapi galat merah yang menunjukkan gagalnya test:
+
+{{{
+8 specs, 1 failure
+Spec List | Failures
+fizzBuzz jika n adalah 30 seharusnya menghasilkan "FizzBuzz"
+Expected 'Buzz' to equal 'FizzBuzz'.
+}}}
+
+Tampak bahwa 30 masih dianggap sebagai bilangan yang habis dibagi 5, tanpa dicek apakah juga habis dibagi 3 sehingga hasilnya "Buzz", bukan "FizzBuzz". Untuk memenuhi spesifikasi, kita tambahkan pengecekan bilangan input. Bilangan yang habis dibagi 3 dan 5 pastinya habis dibagi 15, sehingga bisa kita perbaiki kembali implementasi kita seperti berikut:
+
+{{{
+function fizzBuzz(n) {
+  var returnValue = n.toString();
+
+  if(n % 3 == 0) returnValue =  "Fizz";
+  if(n % 5 == 0) returnValue =  "Buzz";
+  if(n % 15 == 0) returnValue =  "FizzBuzz";
+
+  return returnValue;
+}
+}}}
+
+SpecRunner dimuat ulang, tampaklah implementasi kita berhasil lulus:
+
+{{{
+8 specs, 0 failures
+
+    fizzBuzz
+        jika n adalah 1
+            seharusnya menghasilkan "1"
+        jika n adalah 2
+            seharusnya menghasilkan "2"
+        jika n adalah 3
+            seharusnya menghasilkan "Fizz"
+        jika n adalah 6
+            seharusnya menghasilkan "Fizz"
+        jika n adalah 5
+            seharusnya menghasilkan "Buzz"
+        jika n adalah 10
+            seharusnya menghasilkan "Buzz"
+        jika n adalah 15
+            seharusnya menghasilkan "FizzBuzz"
+        jika n adalah 30
+            seharusnya menghasilkan "FizzBuzz"
+}}}
+
+Sejauh ini, implementasi fizzBuzz kita sudah memenuhi syarat yang diminta dari spesifikasi awal. Jika dilihat kode implementasi, menurut saya sudah cukup sederhana dan rapi sehingga tidak perlu lagi direfactor. Jika menurut anda masih perlu refactor, silakan dicoba. Sudah ada tes, jadi bisa dengan tenang mencoba-coba refaktornya. //Ntap//.
+
+Kode test yang kita buat diatas selengkapnya adalah seperti berikut:
+
+{{{
+describe('fizzBuzz', function() {
+  describe('jika n adalah 1', function() {
+    it('seharusnya menghasilkan "1"', function() {
+      expect(fizzBuzz(1)).toEqual("1");
+    });
+  });
+
+  describe('jika n adalah 2', function() {
+    it('seharusnya menghasilkan "2"', function() {
+      expect(fizzBuzz(2)).toEqual("2");
+    });
+  });
+
+  describe('jika n adalah 3', function() {
+    it('seharusnya menghasilkan "Fizz"', function() {
+      expect(fizzBuzz(3)).toEqual("Fizz");
+    });
+  });
+
+  describe('jika n adalah 6', function() {
+    it('seharusnya menghasilkan "Fizz"', function() {
+      expect(fizzBuzz(6)).toEqual("Fizz");
+    });
+  });
+
+  describe('jika n adalah 5', function() {
+    it('seharusnya menghasilkan "Buzz"', function() {
+      expect(fizzBuzz(5)).toEqual("Buzz");
+    });
+  });
+
+  describe('jika n adalah 10', function() {
+    it('seharusnya menghasilkan "Buzz"', function() {
+      expect(fizzBuzz(10)).toEqual("Buzz");
+    });
+  });
+
+  describe('jika n adalah 15', function() {
+    it('seharusnya menghasilkan "FizzBuzz"', function() {
+      expect(fizzBuzz(15)).toEqual("FizzBuzz");
+    });
+  });
+
+  describe('jika n adalah 30', function() {
+    it('seharusnya menghasilkan "FizzBuzz"', function() {
+      expect(fizzBuzz(30)).toEqual("FizzBuzz");
+    });
+  });
+});
+}}}
+
+Jika disimak, dalam test tersebut terdapat pengujian yang sebenarnya mirip kondisinya, yaitu ketika n=1 dan 2, n=3 dan 6, n=5 dan 10, serta n=15 dan 30. Kondisi-kondisi tersebut dapat dikelompokkan sehingga test menjadi lugas dan lebih jelas lagi dalam menunjukkan tujuan daripada kode implementasi kita. Saya merefaktor test menjadi seperti berikut:
+
+{{{
+describe('fizzBuzz', function() {
+  describe('jika n adalah tidak habis dibagi 3 maupun 5', function() {
+    it('seharusnya menghasilkan string bilangan itu sendiri', function() {
+      expect(fizzBuzz(1)).toEqual("1");
+      expect(fizzBuzz(2)).toEqual("2");
+    });
+  });
+
+  describe('jika n habis dibagi 3', function() {
+    it('seharusnya menghasilkan "Fizz"', function() {
+      expect(fizzBuzz(3)).toEqual("Fizz");
+      expect(fizzBuzz(6)).toEqual("Fizz");
+    });
+  });
+
+  describe('jika habis dibagi 5', function() {
+    it('seharusnya menghasilkan "Buzz"', function() {
+      expect(fizzBuzz(5)).toEqual("Buzz");
+      expect(fizzBuzz(10)).toEqual("Buzz");
+    });
+  });
+
+  describe('jika n habis dibagi 15', function() {
+    it('seharusnya menghasilkan "FizzBuzz"', function() {
+      expect(fizzBuzz(15)).toEqual("FizzBuzz");
+      expect(fizzBuzz(30)).toEqual("FizzBuzz");
+    });
+  });
+});
+}}}
+
+Kode implementasi kita masih lulus dengan test setelah refaktor:
+
+{{{
+4 specs, 0 failures
+
+    fizzBuzz
+        jika n adalah tidak habis dibagi 3 maupun 5
+            seharusnya menghasilkan string bilangan itu sendiri
+        jika n habis dibagi 3
+            seharusnya menghasilkan "Fizz"
+        jika habis dibagi 5
+            seharusnya menghasilkan "Buzz"
+        jika n habis dibagi 15
+            seharusnya menghasilkan "FizzBuzz"
+}}}
+
+Tampak bahwa hasil jalannya SpecRunner jadi sangat mirip dengan spesifikasi masalah yang diminta sejak awal. Anda bisa menambahkan lagi testcase untuk bilangan lain di tiap-tiap kondisi. Hasilnya tetap sama.
+
+Sampai disini lengkaplah fungsi fizzBuzz dalam javascript dengan test menggunakan Jasmine. Ke depan saya akan menulis tentang penggunaan Jasmine yang lebih berhubungan dengan habitat asli javascript, yaitu halaman web. Setelah itu, rencananya saya tidak akan banyak menyinggung dasar Test Driven Development dan lebih sering menulis secara singkat temuan dan trik saat menggunakan JasmineSpec, ataupun test framework lainnya.

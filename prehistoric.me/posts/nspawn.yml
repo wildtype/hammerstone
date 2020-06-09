@@ -1,0 +1,92 @@
+title: Membuat dan Menjalankan Linux dalam Container dengan systemd-nspawn
+slug: nspawn
+created_at: 2015-10-10T05:05:09+07:00
+--- |-
+=== Linux Container
+Container adalah salah satu cara untuk menjalankan beberapa sistem operasi secara bersamaan dalam satu komputer. Dalam sistem container, sistem operasi berjalan secara terisolasi namun tetap menggunakan kernel yang sama dengan induknya. Proses-proses yang dijalankan di dalam sistem operasi “virtual” akan tampak seperti proses tambahan biasa di sistem operasi induk, sehingga virtualisasi dengan container hanya membutuhkan sedikit overhead dan proses yang berjalan di dalamnya secepat proses pada sistem induk. Pengguna distro linux arch, funtoo, gentoo, atau yang sering menginstall debian melalui debootstrap tentu tidak asing dengan chroot, nah container disini merupakan pengembangan lebih lanjut dari chroot.
+--- |-
+=== Linux Container
+
+Container adalah salah satu cara untuk menjalankan beberapa sistem operasi secara bersamaan dalam satu komputer. Dalam sistem container, sistem operasi berjalan secara terisolasi namun tetap menggunakan kernel yang sama dengan induknya. Proses-proses yang dijalankan di dalam sistem operasi “virtual” akan tampak seperti proses tambahan biasa di sistem operasi induk, sehingga virtualisasi dengan container hanya membutuhkan sedikit overhead dan proses yang berjalan di dalamnya secepat proses pada sistem induk. Pengguna distro linux arch, funtoo, gentoo, atau yang sering menginstall debian melalui debootstrap tentu tidak asing dengan chroot, nah container disini merupakan pengembangan lebih lanjut dari chroot.
+
+Ada beberapa contoh software container, antara lain LXC yang merupakan de facto container untuk linux, OpenVZ yang populer untuk menyediakan layanan VPS, Docker yang sedang populer di tengah hingar-bingar dunia cloud, jails di sistem operasi FreeBSD yang selalu dibangga-banggakan oleh komunitasnya, lalu ada systemd-nspawn yang masih cukup baru dan jadi bahasan utama tulisan ini. Sistem container lainnya dapat dilihat di halaman wikipedia tentang [[https://en.wikipedia.org/wiki/Operating-system-level_virtualization|Operating system-level virtualisation]].
+
+=== systemd
+
+systemd adalah sistem inisialisasi untuk linux yang termasuk baru, sering ditawarkan sebagai pengganti sistem init yang akan memodernkan ekosistem GNU/Linux dan membuat istilah init menjadi kuno. Beberapa distro linux sudah mengadopsi systemd sebagai init system utama yang didukung, misalnya archlinux, debian (sejak versi 8/jessie), fedora, dan centos/RHEL (sejak versi 7). systemd cukup kontroversial karena memuat berbagai fitur yang tidak seharusnya ada di dalam sistem init, tuduhan tidak sesuai dengan filosofi unix, dan pemaksaan penggunaannya karena ketergantungan software terhadap systemd (misalnya desktop GNOME). Sebagai pengguna biasa, saya menganggap systemd bagus, setidaknya waktu boot menjadi lebih singkat, dan tentu saja, adanya systemd-nspawn.
+
+=== Langkah membuat dan menjalankan linux dalam container dengan systemd-nspawn
+
+Beginilah caranya membuat dan menjalankan sistem virtual dengan menggunakan systemd-nspawn (akhirnyaa…). Di sini saya menggunakan distro debian testing/stretch sebagai sistem induknya. Semua perintah dijalankan sebagai root. Pertama-tama, pastikan dulu perintah systemd-nspawn sudah ada.
+
+{{{
+which systemd-nspawn
+}}}
+
+Belakangan ini systemd dan systemd-nspawn didistribusikan sebagai paket terpisah, jika kita menggunakan debian stretch, sid, atau mungkin juga archlinux dan belum lama melakukan update sistem, ada kemungkinan kita tidak lagi memiliki systemd-nspawn, kecuali kita sudah menginstallnya secara eksplisit:
+
+{{{
+apt-get install systemd-nspawn
+}}}
+
+Sistem operasi virtual kita akan membutuhkan struktur direktori rootnya sendiri. Untuk mudahnya, saya akan menggunakan //debootstrap// untuk membangun sistem debian:
+
+{{{
+apt-get install debootstrap
+
+debootstrap --arch=amd64 unstable debian-sid
+}}}
+
+Parameter unstable menandakan versi sistem debian yang akan diinstall yaitu unstable (sid), sementara debian-sid adalah direktori yang saya jadikan lokasi target instalasi. //debootstrap// akan mulai mengunduh paket-paket debian dan menginstallnya ke dalam direktori target.
+
+Untuk memasang sistem //archlinux//, saya menggunakan script //arch-bootstrap//:
+
+{{{
+curl https://raw.githubusercontent.com/yannayl/arch-bootstrap/master/arch-bootstrap.sh > /usr/local/bin/arch-bootstrap
+
+chmod a+x /usr/local/bin/arch-bootstrap
+
+arch-bootstrap archlinux
+}}}
+
+Paket-paket dasar archlinux akan diunduh dan diekstrak ke dalam direktori archlinux. Setelah //debootstrap// atau //archbootstrap// selesai mengunduh dan mengekstrak paket-paketnya, kita bisa mulai menjalankan sistem virtual tersebut:
+
+{{{
+systemd-nspawn -D debian-sid
+}}}
+
+atau
+
+{{{
+systemd-nspawn -D archlinux
+}}}
+
+systemd akan menjalankan linux dengan debian-sid atau archlinux sebagai direktori rootnya dan langsung menyajikan antarmuka baris perintah. Pertama kali berjalan, set lebih dulu password untuk root:
+
+{{{
+passwd
+}}}
+
+Lalu keluar lagi dari sistem dalam kontainer dengan perintah “exit” atau menekan Ctrl-D. Setelah itu, sistem dalam kontainer kita dapat di-boot sepenuhnya
+
+{{{
+systemd-nspawn -bD debian-sid
+}}}
+
+atau
+
+{{{
+systemd-nspawn -bD archlinux
+}}}
+
+{{https://prehistoric.me/wp-content/uploads/2015/10/boot-nspawn.png}}
+
+Menjalankan systemd-nspawn dengan opsi -b menyebabkan service-service/daemon yang umumnya dijalankan saat inisialisasi sistem akan turut dijalankan. Di dalam sistem tadi, kita bisa mulai menginstall berbagai software atau memasang service yang diinginkan. Setau saya, antarmuka jaringan/port yang digunakan di dalam sistem ini dibagi-bagi dengan sistem induk dan kontainer lainnya, sehingga kita tidak bisa menjalankan service dengan menggunakan port yang sama (misalnya, menjalankan nginx di kontainer dan host sama-sama di port 80).
+
+Selesailah pembuatan sistem virtual kita.
+
+=== Lalu, untuk apa?
+
+systemd-nspawn bukan merupakan container yang selengkap dan serumit LXC, docker, atau OpenVZ sehingga mungkin kurang cocok digunakan seperti kontainer tersebut (misalnya dijadikan VPS untuk umum). Tapi seperti yang disarankan oleh pembuatnya, systemd-nspawn cocok digunakan untuk lingkungan pengembangan, atau bisa juga digunakan untuk sekedar mencoba-coba berbagai software tanpa merusak sistem utama. Misalnya kita ingin menjalankan berbagai versi sistem linux-nginx/apache-php/perl/python-mysql/mariadb/postgres tanpa perlu repot-repot mengatur direktori data-data defaultnya atau repot memikirkan berbagai dependensi yang beragam versi juga, kita bisa menggunakan kontainer berbasis systemd-nspawn ini.
+
+Masih banyak lagi yang bisa dilakukan dan diatur dari container ini, misalnya menjadikan container yang sudah dibuat sebagai image docker (biar kekinian euy!), menjalankan Xorg dan software berbasis GUI didalamnya, mengatur agar container otomatis berjalan saat sistem induk di-boot, menjalankan container secara otomatis saat ada koneksi ke soket/port tertentu (socket activation), dan lain-lain. Insyaallah kelak akan saya lanjutkan dan tulis lagi jika saya sendiri sudah mengeksplorasinya.

@@ -1,0 +1,47 @@
+title: Membuat Instance FreeBSD di Google Compute Engine
+slug: freebsd-gcp
+created_at: 2018-01-07T05:19:33+07:00
+--- |-
+Biasanya saya memakai FreeBSD di VPS. Caranya, ketika memesan layanan VPS dipilih sembarang sistem operasi yang tersedia, kemudian minta kepada penyedia VPS untuk menyediakan ISO media instalasi FreeBSD. VPS direboot dengan media boot ISO instalasi FreeBSD, selanjutnya instalasi dilakukan sendiri secara manual.
+
+Di GCE, kita tidak bisa begitu saja menginstall sistem operasi ke instance virtual machine yang ada
+--- |-
+Biasanya saya memakai FreeBSD di VPS. Caranya, ketika memesan layanan VPS dipilih sembarang sistem operasi yang tersedia, kemudian minta kepada penyedia VPS untuk menyediakan ISO media instalasi FreeBSD. VPS direboot dengan media boot ISO instalasi FreeBSD, selanjutnya instalasi dilakukan sendiri secara manual.
+
+Di GCE, kita tidak bisa begitu saja menginstall sistem operasi ke instance virtual machine yang ada.  Sejauh yang saya tahu, tidak ada pilihan untuk mereboot instance dengan pilihan boot media instalasi OS. Jadi jika menghidupkan instance dengan suatu image sistem operasi tertentu, ya sudah sistem operasi itulah yang ada sampai instance selesai dipakai dan dihapus. Akibatnya kita hanya bisa memakai sistem operasi yang imagenya sudah tersedia di GCP, atau membuat image sendiri.
+
+Untungnya pengembang FreeBSD juga menyediakan image di GCP. Image tersebut tersedia di project {{{freebsd-org-cloud-dev}}} dan dapat diakses oleh publik, jadi kita bisa membuat instance FreeBSD dari image yang ada di sana. Karena bukan buatan google, pilihan image tersebut tidak muncul di daftar image console GCP, jadi membuat instancenya pun tidak bisa melalui console GCP, melainkan lewat command {{{gcloud}}}.
+
+Daftar image yang tersedia bisa dilihat dengan perintah seperti ini:
+
+{{{
+gcloud compute images list --no-standard-images --project=freebsd-org-cloud-dev
+}}}
+
+Hasilnya:
+
+{{{
+
+NAME                                      PROJECT                FAMILY  DEPRECATED  STATUS
+freebsd-10-2-rc1-amd64                    freebsd-org-cloud-dev                      READY
+freebsd-10-2-rc2-amd64                    freebsd-org-cloud-dev                      READY
+... dipotong ..
+freebsd-12-0-current-amd64-2017-12-21     freebsd-org-cloud-dev                      READY
+freebsd-12-0-current-amd64-2017-12-28     freebsd-org-cloud-dev                      READY
+}}}
+
+Untuk membuat instance dengan image tersebut, dilakukan dengan perintah seperti ini:
+
+{{{
+gcloud compute instances create "nama-instance" --zone "asia-southeast1-a" --machine-type "f1-micro" --image "freebsd-12-0-current-amd64-2017-12-28" --image-project "freebsd-org-cloud-dev" --boot-disk-size "60" --network "nama-network" --tags "nama-tag-instance" --subnet "nama-subnetwork"
+}}}
+
+Parameter yang signifikan di sini adalah {{{--image-project}}}. Sesuai namanya, parameter {{{--image-project}}} menentukan dari project GCP mana image tersebut diambil. Tanpa parameter tersebut, image akan dicari dari project milik kita atau dari daftar image yang disediakan oleh google.
+
+Dari beberapa image yang saya coba, hanya //freebsd-12-0-current-*// yang bisa dipakai. Instance yang dibuat dengan image versi lain tidak bisa diakses melalui SSH. Kalau dilihat di log system melalui serial console, instance dari image versi sebelumnya gagal memulai daemon server SSH, seperti sedang ada server SSH yang sudah berjalan.
+
+OS yang berjalan di GCE perlu menjalankan beberapa service tambahan untuk integrasi ke berbagai layanan GCP terkait seperti monitoring dan penempatan kunci SSH. Dugaan saya, image FreeBSD versi-versi sebelumnya mengalami bug di service tersebut. Bug tersebut menyebabkan ssh-keys yang kita miliki di GCP tidak dikenali oleh instance, sehingga instance tidak bisa diakses lewat SSH.
+
+Sayang sekali, pasalnya versi release production saat ini adalah versi 11.1, 10.4, dan 10.3. Menggunakan versi 12-current agak merepotkan karena belum release. Misalnya saja, perintah {{qjail install}} tidak bisa langsung berjalan karena basejail hanya tersedia untuk versi release. Soal ini mungkin akan dibahas pada tulisan berikutnya.
+
+Sekian curhat saya.

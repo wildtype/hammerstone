@@ -1,0 +1,438 @@
+title: Menggunakan Method __setitem__ dan __getitem__ untuk Mengimplementasikan Dynamic List di Python
+slug: py-dl
+created_at: 2018-12-22T00:47:20+07:00
+--- |-
+Misalkan kita memiliki list seperti berikut:
+
+{{{
+numbers = [1,2,3,4,5]
+}}}
+
+kita hanya akan bisa mengakses anggota numbers dari {{{numbers[0]}}} sampai {{{numbers[4]}}}. Ketika mencoba untuk mengakses anggota list di luar jangkauan, kita akan mendapat error {{{IndexError}}}:
+
+{{{
+numbers[9] = 10
+}}}
+
+{{{
+---------------------------------------------------------------------------
+IndexError Traceback (most recent call last)
+<ipython-input-5-2e808a652e84> in <module>()
+----> 1 numbers[9] = 10
+
+IndexError: list assignment index out of range
+}}}
+
+Kita harus secara eksplisit memberi nilai elemen-elemen posisi sebelumnya sampai posisi ke-9, agar kemudian posisi ke-9 tersebut bisa ditempati, misalnya dengan menggunakan fungsi {{{append()}}}:
+
+{{{
+>>> while(len(numbers) < 10): numbers.append(None)
+>>> numbers
+[1, 2, 3, 4, 5, None, None, None, None, None]
+>>> numbers[9] = 10
+>>> numbers
+[1, 2, 3, 4, 5, None, None, None, None, 10]
+}}}
+
+Di python, kita bisa mendefinisikan metode object yang akan membuat object tersebut berlaku seperti list atau iterator, diantaranya {{{__getitem__}}}, {{{__setitem__}}}.
+--- |-
+Misalkan kita memiliki list seperti berikut:
+
+{{{
+numbers = [1,2,3,4,5]
+}}}
+
+kita hanya akan bisa mengakses anggota numbers dari {{{numbers[0]}}} sampai {{{numbers[4]}}}. Ketika mencoba untuk mengakses anggota list di luar jangkauan, kita akan mendapat error {{{IndexError}}}:
+
+{{{
+numbers[9] = 10
+}}}
+
+{{{
+---------------------------------------------------------------------------
+IndexError Traceback (most recent call last)
+<ipython-input-5-2e808a652e84> in <module>()
+----> 1 numbers[9] = 10
+
+IndexError: list assignment index out of range
+}}}
+
+Kita harus secara eksplisit memberi nilai elemen-elemen posisi sebelumnya sampai posisi ke-9, agar kemudian posisi ke-9 tersebut bisa ditempati, misalnya dengan menggunakan fungsi {{{append()}}}:
+
+{{{
+>>> while(len(numbers) < 10): numbers.append(None)
+>>> numbers
+[1, 2, 3, 4, 5, None, None, None, None, None]
+>>> numbers[9] = 10
+>>> numbers
+[1, 2, 3, 4, 5, None, None, None, None, 10]
+}}}
+
+Di python, kita bisa mendefinisikan metode object yang akan membuat object tersebut berlaku seperti list atau iterator, diantaranya {{{__getitem__}}}, {{{__setitem__}}}.
+
+Kita mulai dengan membuat class DynamicList, testnya seperti ini:
+
+{{{
+import unittest
+from dynamic_list import DynamicList
+
+class TestDynamicList(unittest.TestCase):
+
+    def test_it_has_attribute_to_store_actual_data(self):
+        dynamic_list = DynamicList()
+
+if __name__ == '__main__':
+    unittest.main()
+}}}
+
+Ketika dijalankan:
+
+{{{
+$ python dynamic_list_test.py 
+Traceback (most recent call last):
+  File "dynamic_list_test.py", line 2, in <module>
+    from dynamic_list import DynamicList
+ImportError: No module named 'dynamic_list'
+}}}
+
+Terjadi error karena modul belum dibuat, jadi kita buat file {{{dynamic_list.py}}} seperti berikut:
+
+{{{
+class DynamicList:
+    def __init__(self):
+        pass
+
+kemudian test dijalankan lagi:
+
+$ python dynamic_list_test.py -v
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+}}}
+
+Test lulus, kita tambahkan lagi test untuk menguji bahwa object kita memiliki attribut untuk menyimpan data sesungguhnya, sebut saja container
+
+{{{
+def test_it_has_attribute_to_store_actual_data(self):
+    dynamic_list = DynamicList()
+    self.assertEqual(dynamic_list.container, [])
+}}}
+
+hasilnya:
+
+{{{
+$ python dynamic_list_test.py -v
+test_it_has_attribute_to_store_data (__main__.TestDynamicList) ... ERROR
+
+======================================================================
+ERROR: test_it_has_attribute_to_store_data (__main__.TestDynamicList)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "dynamic_list_test.py", line 8, in test_it_has_attribute_to_store_data
+    self.assertEqual(dynamic_list.container, [])
+AttributeError: 'DynamicList' object has no attribute 'container'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (errors=1)
+}}}
+
+implementasinya mudah:
+
+{{{
+class DynamicList:
+    def __init__(self):
+        self.container = []
+}}}
+
+hasilnya:
+
+{{{
+$ python dynamic_list_test.py -v
+test_it_has_attribute_to_store_data (__main__.TestDynamicList) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+}}}
+
+Kemudian kita ingin object tersebut bisa diambil datanya seperti mengambil elemen pada list biasa:
+
+{{{
+def test_it_behaves_like_list_when_fetching_its_item(self):
+    dynamic_list = DynamicList()
+    dynamic_list.container = [1]
+    self.assertEqual(dynamic_list[0], 1)
+}}}
+
+hasil testnya:
+
+{{{
+$ python dynamic_list_test.py -v
+test_it_behaves_like_list_when_fetching_its_item (__main__.TestDynamicList) ... ERROR
+test_it_has_attribute_to_store_data (__main__.TestDynamicList) ... ok
+
+======================================================================
+ERROR: test_it_behaves_like_list_when_fetching_its_item (__main__.TestDynamicList)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "dynamic_list_test.py", line 13, in test_it_behaves_like_list_when_fetching_its_item
+    self.assertEqual(dynamic_list[0], 1)
+TypeError: 'DynamicList' object does not support indexing
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.000s
+
+FAILED (errors=1)
+}}}
+
+galat test yang perlu diperhatikan adalah bagian ini:
+
+{{{
+    self.assertEqual(dynamic_list[0], 1)
+TypeError: 'DynamicList' object does not support indexing
+}}}
+
+Kita berusaha mengaksesnya seperti list, tetapi object tersebut belum mendukung indexing seperti list biasa. Di sinilah kita perlu mengimplementasikan method {{{__getitem__}}}.
+
+{{{
+def __getitem__(self, position):
+    return self.container[position]
+}}}
+
+hasilnya:
+
+{{{
+$ python dynamic_list_test.py -v
+test_it_behaves_like_list_when_fetching_its_item (__main__.TestDynamicList) ... ok
+test_it_has_attribute_to_store_data (__main__.TestDynamicList) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.000s
+
+OK
+}}}
+
+Lalu seperti dijanjikan, kita ingin bisa mengambil nilai pada posisi manapun tanpa error. Jika tidak ada nilai pada posisi tersebut, nilai yang diharapkan adalan {{{None}}}:
+
+{{{
+$ python dynamic_list_test.py -v
+test_it_behaves_like_list_when_fetching_its_item (__main__.TestDynamicList) ... ok
+test_it_has_attribute_to_store_data (__main__.TestDynamicList) ... ok
+test_it_returns_none_when_fetching_nonexistent_item_instead_of_throwing_error (__main__.TestDynamicList) ... ERROR
+
+======================================================================
+ERROR: test_it_returns_none_when_fetching_nonexistent_item_instead_of_throwing_error (__main__.TestDynamicList)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "dynamic_list_test.py", line 18, in test_it_returns_none_when_fetching_nonexistent_item_instead_of_throwing_error
+    self.assertEqual(dynamic_list[10], None)
+  File "/home/wildtype/Documents/Sandbox/dl/dynamic_list.py", line 8, in __getitem__
+    return self.container[position]
+IndexError: list index out of range
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.002s
+
+FAILED (errors=1)
+}}}
+
+Nah, alih-alih mendapat nilai {{{None}}} kita malah mendapat galat {{{IndexError}}}. Implementasinya, ditangkap saja galat tersebut:
+
+{{{
+def __getitem__(self, position):
+    try:
+        return self.container[position]
+    except IndexError:
+        return None
+}}}
+
+hasilnya:
+
+{{{
+$ python dynamic_list_test.py -v
+test_it_attribute_to_store_data (__main__.TestDynamicList) ... ok
+test_it_behaves_like_list_when_fetching_its_item (__main__.TestDynamicList) ... ok
+test_it_returns_none_when_fetching_nonexistent_item_instead_of_throwing_error (__main__.TestDynamicList) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.000s
+
+OK
+}}}
+
+Sudah bisa mengambil nilai, bagaimana dengan mengatur nilai?
+
+{{{
+def test_it_behaves_like_list_when_setting_item_value(self):
+    dynamic_list = DynamicList()
+    dynamic_list.container = [None]
+    dynamic_list[0] = 100
+    self.assertEqual(dynamic_list[0], 100)
+}}}
+
+Kita masih belum bisa mengatur nilai elemen object tersebut seperti mengatur element list:
+
+{{{
+$ python dynamic_list_test.py -v
+test_it_behaves_like_list_when_fetching_its_item (__main__.TestDynamicList) ... ok
+test_it_behaves_like_list_when_setting_item_value (__main__.TestDynamicList) ... ERROR
+test_it_has_attribute_to_store_data (__main__.TestDynamicList) ... ok
+test_it_returns_none_when_fetching_nonexistent_item_instead_of_throwing_error (__main__.TestDynamicList) ... ok
+
+======================================================================
+ERROR: test_it_behaves_like_list_when_setting_item_value (__main__.TestDynamicList)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "dynamic_list_test.py", line 24, in test_it_behaves_like_list_when_setting_item_value
+    dynamic_list[0] = 100
+TypeError: 'DynamicList' object does not support item assignment
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+FAILED (errors=1)
+}}}
+
+Nah, kita perlu mengimplementasikan method lainnya, yaitu {{{__setitem__}}}
+
+{{{
+def __setitem__(self, position, value):
+    self.container[position] = value
+}}}
+
+hasilnya:
+
+{{{
+$ python dynamic_list_test.py -v
+test_it_behaves_like_list_when_fetching_its_item (__main__.TestDynamicList) ... ok
+test_it_behaves_like_list_when_setting_item_value (__main__.TestDynamicList) ... ok
+test_it_has_attribute_to_store_data (__main__.TestDynamicList) ... ok
+test_it_returns_none_when_fetching_nonexistent_item_instead_of_throwing_error (__main__.TestDynamicList) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.000s
+
+OK
+}}}
+
+Sejauh ini object tersebut hanya bisa diatur nilai elemennya pada posisi yang sebelumnya sudah ada. Kita ingin agar bisa diatur pada posisi manapun:
+
+{{{
+$ python dynamic_list_test.py -v
+test_it_able_to_set_item_value_at_any_position (__main__.TestDynamicList) ... ERROR
+test_it_behaves_like_list_when_fetching_its_item (__main__.TestDynamicList) ... ok
+test_it_behaves_like_list_when_setting_item_value (__main__.TestDynamicList) ... ok
+test_it_has_attribute_to_store_data (__main__.TestDynamicList) ... ok
+test_it_returns_none_when_fetching_nonexistent_item_instead_of_throwing_error (__main__.TestDynamicList) ... ok
+
+======================================================================
+ERROR: test_it_able_to_set_item_value_at_any_position (__main__.TestDynamicList)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "dynamic_list_test.py", line 30, in test_it_able_to_set_item_value_at_any_position
+    dynamic_list[100] = 100
+  File "/home/wildtype/Documents/Sandbox/dl/dynamic_list.py", line 13, in __setitem__
+    self.container[position] = value
+IndexError: list assignment index out of range
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.002s
+
+FAILED (errors=1)
+}}}
+
+Implementasinya, kita perlu mengisi container dengan None sampai setidaknya sepanjang 2 kali posisi index yang ingin diisi. Kita buat 2 kali supaya tidak terlalu sering mengubah ukuran container karena ada ruang tersisa.
+
+{{{
+def __setitem__(self, position, value):
+    try:
+        self.container[position] = value
+    except IndexError:
+        self.container += [None] * position * 2
+        self.container[position] = value
+}}}
+
+hasilnya:
+
+{{{
+$ python dynamic_list_test.py -v
+test_it_able_to_set_item_value_at_any_position (__main__.TestDynamicList) ... ok
+test_it_behaves_like_list_when_fetching_its_item (__main__.TestDynamicList) ... ok
+test_it_behaves_like_list_when_setting_item_value (__main__.TestDynamicList) ... ok
+test_it_has_attribute_to_store_data (__main__.TestDynamicList) ... ok
+test_it_returns_none_when_fetching_nonexistent_item_instead_of_throwing_error (__main__.TestDynamicList) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.001s
+
+OK
+}}}
+
+Dynamic list tersebut sudah cukup lengkap, bisa diambil dan diatur nilainya pada posisi manapun. Begini hasil akhir implementasi selengkapnya:
+
+{{{
+class DynamicList:
+
+    def __init__(self):
+        self.container = []
+
+    def __getitem__(self, position):
+        try:
+            return self.container[position]
+        except IndexError:
+            return None
+
+    def __setitem__(self, position, value):
+        try:
+            self.container[position] = value
+        except IndexError:
+            self.container += [None] * position * 2
+            self.container[position] = value
+}}}
+
+Sedangkan kode testnya:
+
+{{{
+import unittest
+from dynamic_list import DynamicList
+
+class TestDynamicList(unittest.TestCase):
+
+    def test_it_has_attribute_to_store_data(self):
+        dynamic_list = DynamicList()
+        self.assertEqual(dynamic_list.container, [])
+
+    def test_it_behaves_like_list_when_fetching_its_item(self):
+        dynamic_list = DynamicList()
+        dynamic_list.container = [1]
+        self.assertEqual(dynamic_list[0], 1)
+
+    def test_it_returns_none_when_fetching_nonexistent_item_instead_of_throwing_error(self):
+        dynamic_list = DynamicList()
+        dynamic_list.container = [1]
+        self.assertEqual(dynamic_list[10], None)
+
+
+    def test_it_behaves_like_list_when_setting_item_value(self):
+        dynamic_list = DynamicList()
+        dynamic_list.container = [None]
+        dynamic_list[0] = 100
+        self.assertEqual(dynamic_list[0], 100)
+
+    def test_it_able_to_set_item_value_at_any_position(self):
+        dynamic_list = DynamicList()
+        dynamic_list.container = []
+        dynamic_list[100] = 100
+        self.assertEqual(dynamic_list[100], 100)
+
+
+if __name__ == '__main__':
+    unittest.main()
+}}}
+
+Tentu saja, masih banyak yang perlu diimplementasikan supaya bisa lebih mirip list bawaan python, misalnya method {{{append()}}}, atau supaya bisa dihitung jumlah elemennya dengan function {{{len()}}}. Selain itu mungkin kode tersebut bisa direfactor supaya lebih baik. Silakan pembaca mencoba sendiri.

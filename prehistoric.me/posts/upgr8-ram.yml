@@ -1,0 +1,27 @@
+title: Upgrade RAM
+slug: upgr8-ram
+created_at: 2019-01-01T21:28:44+07:00
+--- |-
+Sebelum upgrade, laptop saya, Thinkpad X240, kapasitas RAM-nya hanya 4GB. Cukup untuk kebanyakan kegiatan yang saya lakukan, tapi sering juga kurang. Misal sedang membuka halaman console Google Cloud Platform, jika banyak tab console GCP dibuka dan cukup lama, penggunaan memory akan membengkak. Sudah lama saya ingin menambah RAM, tetapi selalu tertunda sampai terlupa.
+--- |-
+Sebelum upgrade, laptop saya, Thinkpad X240, kapasitas RAM-nya hanya 4GB. Cukup untuk kebanyakan kegiatan yang saya lakukan, tapi sering juga kurang. Misal sedang membuka halaman console Google Cloud Platform, jika banyak tab console GCP dibuka dan cukup lama, penggunaan memory akan membengkak. Sudah lama saya ingin menambah RAM, tetapi selalu tertunda sampai terlupa. Saya jadi teringat lagi rencana tersebut ketika membaca [[https://sucipto.net/2018/12/24/upgrade-ram/|blog seorang kawan]].
+
+Dari membaca berbagai referensi, laptop saya hanya bisa dipasangi RAM bertipe DDR3L dan kapasitas maksimalnya hanya 8GB, slot RAM yang tersedia hanya satu. Maka hari Jumat lalu, hari kerja terakhir di tahun 2018, saya mencari  RAM dengan spesifikasi tersebut di Ratu Plaza. Pilihan jatuh pada Corsair. Nggak milih juga sih, karena ternyata di toko-toko yang saya datangi, RAM yang sesuai spesifikasi tadi hanya tersedia merek Corsair, ya sudah saya beli saja yang ada.
+
+Rencananya malam itu akan langsung saya pasang, tetapi kenyataan tidak semudah yang saya kira. Salah satu sekrup casing laptop saya aus sehingga tidak bisa dibuka. Dulu saya pernah membongkar laptop ini untuk memasang SSD, mungkin karena memakai obeng yang ukurannya tidak pas membuat lekukan sekrup aus. Karena kesulitan, saya pun menyerah.
+
+{{https://prehistoric.me/wp-content/uploads/2019/01/sekrup-aus-768x513.jpg}}
+
+<<caption yang aus yang aus>>
+
+Tadi saya mencoba lagi membuka sekrup aus tersebut dengan menggunakan obeng elektrik, sambil menekan kuat. Alhamdulillah, sekrup berhasil terbuka meskipun tambah aus. Casing laptop pun terbuka. Ngomong-omong, thinkpad X240 ini lumayan ribet membuka casingnya, mesti dibuka keseluruhan penutup bawah padahal cuma mau mengganti RAM. Kalau di Thinkpad yang saya punya sebelumnya, seri T410, mengganti RAM atau HDD/SSD tidak perlu membuka seluruh casing, sudah ada slot dan pintu masing-masing.
+
+{{https://prehistoric.me/wp-content/uploads/2019/01/ram-lama-768x513.jpg}}
+
+<<caption RAM bawaan sebelum diganti.>>
+
+Setelah casing terbuka, mengikuti tutorial di berbagai tempat, kabel baterai internal harus dilepas. Sulit juga melepasnya. Setelah itu, RAM lama dicopot dan RAM baru dipasang. Kemudian kabel baterai internal dipasang dan casing ditutup kembali. Alhamdulillah laptop bisa hidup kembali secara normal. Ini pertama kalinya saya mengganti RAM laptop, ternyata cuma begitu saja. Lama dan merepotkan di hal-hal lain, pakai acara sekrup aus pula.
+
+{{https://prehistoric.me/wp-content/uploads/2019/01/ram-baru-768x513.jpg}}
+
+<<caption RAM yang baru sudah terpasang.>>
