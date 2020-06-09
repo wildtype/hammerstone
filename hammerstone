@@ -38,7 +38,9 @@ sub Config {
     Statics => {
       about => "$site_name/templates/about.html",
       blogroll => "$site_name/templates/blogroll.html"
-    }
+    },
+
+    ImageBaseUri => "https://storage.googleapis.com/static.prehistoric.me/pictures/"
   };
 }
 
@@ -142,6 +144,21 @@ sub load_all_posts {
   );
 }
 
+sub build_figure_tag {
+    my ($src, $size, $caption) = split /\s+/, $_[0], 3;
+
+    my $width = ($size eq 'auto') ? 'auto' : ($size . 'px');
+    my $caption_html = trim(creole_parse($caption));
+    my $img_src = Config->{ImageBaseUri} . $src;
+
+    return <<HTML;
+<figure style="width: $width">
+  <img src="$img_src" />
+  <figcaption>$caption_html</figcaption>
+</figure>
+HTML
+}
+
 sub setup_creole_wiki_plugin {
   my $plugin = sub {
     my ($tag, $words) = split /\s+/, $_[0], 2;
@@ -150,6 +167,8 @@ sub setup_creole_wiki_plugin {
       return '<blockquote>'.trim(creole_parse($words)).'</blockquote>';
     } elsif ($tag eq 'caption') {
       return '<p class="image-caption">'.$words.'</p>';
+    } elsif ($tag eq 'figure') {
+      return build_figure_tag($words);
     }
   };
 

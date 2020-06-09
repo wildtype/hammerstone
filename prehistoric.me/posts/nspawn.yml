@@ -79,7 +79,7 @@ atau
 systemd-nspawn -bD archlinux
 }}}
 
-{{https://prehistoric.me/wp-content/uploads/2015/10/boot-nspawn.png}}
+{{https://storage.googleapis.com/static.prehistoric.me/pictures/boot-nspawn.png}}
 
 Menjalankan systemd-nspawn dengan opsi -b menyebabkan service-service/daemon yang umumnya dijalankan saat inisialisasi sistem akan turut dijalankan. Di dalam sistem tadi, kita bisa mulai menginstall berbagai software atau memasang service yang diinginkan. Setau saya, antarmuka jaringan/port yang digunakan di dalam sistem ini dibagi-bagi dengan sistem induk dan kontainer lainnya, sehingga kita tidak bisa menjalankan service dengan menggunakan port yang sama (misalnya, menjalankan nginx di kontainer dan host sama-sama di port 80).
 

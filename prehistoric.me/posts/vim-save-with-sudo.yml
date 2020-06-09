@@ -20,9 +20,12 @@ Bagaimana cara kerjanya? Perintah {{{:w}}} dalam vim berfungsi menyimpan konten.
 
 Sementara itu, [[https://en.wikipedia.org/wiki/Tee_(command)|tee]] adalah commandline umum di sistem operasi unix-like. Fungsinya adalah untuk membaca input dari standard input, kemudian menyimpan input tersebut ke dalam file sambil mencetaknya di standard output. Gambarannya seperti ini:
 
-{{https://prehistoric.me/wp-content/uploads/2017/12/tee.png}}
 
-<<caption Sumber gambar: https://en.wikipedia.org/wiki/File:Tee.svg>>
+<<figure
+  tee.png
+  320
+  Sumber gambar: https://en.wikipedia.org/wiki/File:Tee.svg
+>>
 
 Parameter {{{%}}} bernilai lokasi file yang sedang kita buka atau edit di buffer vim. Jadi, perintah {{{:w !sudo tee %}}} berarti kita meminta vim untuk menjalankan perintah shell {{{sudo tee}}} dengan argumen nama file yang sedang dibuka, kemudian vim akan mengirimkan isi file yang dibuka tadi ke dalam standard input. Dengan begitu, meskipun kita membuka file tanpa hak akses, commandline //tee//-lah yang sebenarnya menulis isi file sebagai root.
 

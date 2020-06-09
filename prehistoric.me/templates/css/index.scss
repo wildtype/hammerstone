@@ -9,15 +9,14 @@ h1>a, h2>a {
   }
 }
 
-p.image-caption{
-  margin-top:-1em;
-  font-size:.85em;
-  text-align:center;
-  color:#555;
+figure {
+  margin: auto;
 }
 
-p>img{
-  margin-bottom:0;
+figcaption{
+  margin-top:-1em;
+  font-size:.9em;
+  color:#444;
 }
 
 ul.blogroll__list{
