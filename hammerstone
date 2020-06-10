@@ -152,7 +152,7 @@ sub build_figure_tag {
     my $img_src = Config->{ImageBaseUri} . $src;
 
     return <<HTML;
-<figure style="width: $width">
+<figure style="max-width: $width">
   <img src="$img_src" />
   <figcaption>$caption_html</figcaption>
 </figure>
