@@ -244,11 +244,14 @@ foreach my $post (@posts) {
   $post_list->append_content(
     article_list_item($list_item_template, $post)
   );
+}
 
+write_archive_page($archive_dom->to_string);
+
+foreach my $post (@posts[0..4]) {
   $index_main->append_content(
     article_excerpt_for_index($index_article_template, $post)
   );
 }
 
-write_archive_page($archive_dom->to_string);
 write_index_page($index_dom->to_string);
