@@ -15,6 +15,7 @@ use DateTime::Format::ISO8601;
 use Encode qw(encode_utf8 decode_utf8);
 use HTML::Packer;
 use String::Util 'trim';
+use XML::Feed;
 
 my $minifier = HTML::Packer->init;
 my $mini_opts = { remove_newlines => 1 };
@@ -34,6 +35,7 @@ sub Config {
 
     ArchivePath => "$site_path/public/archive",
     IndexPath => "$site_path/public",
+    FeedPath => "$site_path/public/feed",
 
     Statics => {
       about => "$site_path/templates/about.html",
@@ -195,6 +197,59 @@ sub write_index_page {
   );
 }
 
+sub write_feed_xml {
+  my ($xml) = @_;
+
+  path(
+    Config->{FeedPath}
+  )->make_path->child('index.xml')->spurt(
+    encode_utf8 $minifier->minify(\$xml, $mini_opts)
+  );
+}
+
+sub build_feed_index {
+  my $feed = XML::Feed->new('RSS', version => '2.0');
+  $feed->title('Prehistoric.Me');
+  $feed->tagline('Ya, aku bakal dibaca');
+  $feed->base('https://prehistoric.me/');
+  $feed->link('https://prehistoric.me/feed/index.xml');
+  $feed->self_link('https://prehistoric.me/feed/index.xml');
+  $feed->author('Mufti');
+  $feed->language('id');
+  $feed->generator('hammerstone');
+  $feed->modified(DateTime->now);
+
+  $feed;
+}
+
+sub build_feed_item {
+  my ($item) = @_;
+
+  my $dt = $item->{created_at}->clone;
+  $dt->set_time_zone('UTC');
+
+  my $entry = XML::Feed::Entry->new;
+  my $entry_link = 'https://prehistoric.me/' . $item->{slug};
+
+  $entry->id('https://prehistoric.me/' . $item->{slug});
+  $entry->link($entry_link);
+  $entry->title($item->{title});
+  $entry->modified($dt);
+  $entry->issued($dt);
+  $entry->author('dev-null@prehistoric.me (Mufti)');
+
+  my $content; 
+  if (defined $item->{excerpt}) {
+    $content = $item->{excerpt} . "<a href=\"$entry_link\">(lanjutkan membaca...)</a>";
+  } else {
+    $content = $item->{content};
+  }
+
+  $entry->content($content);
+
+  $entry;
+}
+
 sub copy_static_pages {
   foreach my $page (keys %{Config->{Statics}}) {
     path(
@@ -227,6 +282,8 @@ my $index_template = path(
   Config->{IndexTemplateFile}
 )->slurp;
 
+my $feed = build_feed_index;
+
 my $archive_dom = Mojo::DOM->new($archive_template);
 my $list_item_template = $archive_dom->at('.post-list__item');
 my $post_list = $archive_dom->at('.post-list');
@@ -244,9 +301,14 @@ foreach my $post (@posts) {
   $post_list->append_content(
     article_list_item($list_item_template, $post)
   );
+
+  $feed->add_entry(
+    build_feed_item($post)
+  );
 }
 
 write_archive_page($archive_dom->to_string);
+write_feed_xml($feed->as_xml);
 
 foreach my $post (@posts[0..4]) {
   $index_main->append_content(
