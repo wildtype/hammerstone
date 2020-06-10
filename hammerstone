@@ -100,7 +100,7 @@ sub article_list_item {
   $link->attr(href => "/$post->{slug}/");
 
   $item->at('.post-list__timestamp')->content(
-    $post->{created_at}->strftime('%d %B %Y')
+    $post->{created_at}->strftime('%d %b %Y')
   );
 
   $item;

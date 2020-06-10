@@ -6,6 +6,7 @@ h1>a, h2>a {
 
   &:hover {
     text-decoration: none;
+    color: #222;
   }
 }
 
@@ -24,19 +25,6 @@ figcaption{
   color:#444;
 }
 
-ul.blogroll__list{
-  padding:0;
-}
-
-li.blogroll__item {
-  display:inline;
-  list-style-type:none;
-
-  &:after {
-    content:'\a0\b7\a0';
-  }
-}
-
 a {
   color: #004da8;
   text-decoration: none;
@@ -47,4 +35,45 @@ a {
 
 body {
   font-size: 1.2rem;
+}
+
+.blogroll {
+  &__list {
+    padding:0;
+  }
+
+  &__item {
+    display:inline;
+    list-style-type:none;
+
+    &:after {
+      content:'\a0\b7\a0';
+    }
+  }
+}
+
+.post-list {
+  padding-left: 0;
+
+  &__item {
+    list-style-type: none;
+  }
+
+  &__timestamp {
+    display: inline-block;
+    vertical-align: top;
+    width: 120px;
+  }
+
+  &__link {
+    display: inline-block;
+    vertical-align: top;
+    width: 620px;
+  }
+}
+
+.post {
+  &__timestamp {
+    font-style: italic;
+  }
 }
