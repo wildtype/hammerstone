@@ -7,10 +7,10 @@ const cssImport = require('postcss-import');
 const cssnano = require('cssnano');
 
 function css() {
-  return src('./templates/css/**/*.scss')
+  return src('./src/**/*.scss')
     .pipe(sass().on('error', sass.logError))
     .pipe(postcss([cssImport, cssnano()]))
-    .pipe(dest('./public/css'));
+    .pipe(dest('./dist'));
 }
 
 exports.css = css;

@@ -20,24 +20,24 @@ my $minifier = HTML::Packer->init;
 my $mini_opts = { remove_newlines => 1 };
 
 sub Config {
-  my $site_name = 'prehistoric.me';
+  my $site_path = 'site';
 
   {
     SiteName => 'prehistoric.me',
 
-    IndexTemplateFile => "$site_name/templates/index.html",
-    ArchiveTemplateFile => "$site_name/templates/archive.html",
-    PostTemplateFile => "$site_name/templates/post.html",
+    IndexTemplateFile => "$site_path/templates/index.html",
+    ArchiveTemplateFile => "$site_path/templates/archive.html",
+    PostTemplateFile => "$site_path/templates/post.html",
 
-    PostSrcGlob => "$site_name/posts/*.yml",
-    PostPath => sub { "$site_name/public/$_[0]" },
+    PostSrcGlob => "$site_path/posts/*.yml",
+    PostPath => sub { "$site_path/public/$_[0]" },
 
-    ArchivePath => "$site_name/public/archive",
-    IndexPath => "$site_name/public",
+    ArchivePath => "$site_path/public/archive",
+    IndexPath => "$site_path/public",
 
     Statics => {
-      about => "$site_name/templates/about.html",
-      blogroll => "$site_name/templates/blogroll.html"
+      about => "$site_path/templates/about.html",
+      blogroll => "$site_path/templates/blogroll.html"
     },
 
     ImageBaseUri => "https://storage.googleapis.com/static.prehistoric.me/pictures/"
