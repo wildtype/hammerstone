@@ -161,16 +161,24 @@ sub build_figure_tag {
 HTML
 }
 
+sub build_abbr_tag {
+  my ($abbr, $title) = split /\s+/, $_[0], 2;
+
+  return qq[<abbr title="$title">$abbr</abbr>];
+}
+
 sub setup_creole_wiki_plugin {
   my $plugin = sub {
     my ($tag, $words) = split /\s+/, $_[0], 2;
 
     if ($tag eq 'bq') {
       return '<blockquote>'.trim(creole_parse($words)).'</blockquote>';
-    } elsif ($tag eq 'caption') {
-      return '<p class="image-caption">'.$words.'</p>';
+    } elsif ($tag eq 'abbr') {
+      return build_abbr_tag($words);
     } elsif ($tag eq 'figure') {
       return build_figure_tag($words);
+    } else {
+      return $_[0];
     }
   };
 
