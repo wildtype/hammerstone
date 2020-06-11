@@ -1,0 +1,21 @@
+title: Ganti Mesin dan Tampilan
+slug: mesin-baru
+created_at: 2020-06-11T21:32:20+07:00
+--- |-
+Lagi-lagi saya mengganti mesin dan tampilan blog ini, tidak ada lagi tulisan "Dengan bangga bertenaga WordPress" di bawah sana. Blog ini kembali menggunakan [[https://github.com/wildtype/hammerstone|hammerstone]], static site/blog generator buatan sendiri. Diberi nama hammerstone karena sederhana dan minim fitur, seperti alat batu masyarakat praaksara.
+
+Static blog generator (SBG) ini nggak sepenuhnya baru, sebelum ganti menggunakan wordpress 2 tahun lalu, saya pakai //hammerstone// juga. Sayangnya...
+--- |-
+Lagi-lagi saya mengganti mesin dan tampilan blog ini, tidak ada lagi tulisan "Dengan bangga bertenaga WordPress" di bawah sana. Blog ini kembali menggunakan [[https://github.com/wildtype/hammerstone|hammerstone]], script static site/blog generator buatan sendiri. Diberi nama hammerstone karena sederhana dan minim fitur, seperti alat batu masyarakat praaksara.
+
+Static blog generator (SBG) ini nggak sepenuhnya baru, sebelum [[/hello-bye|ganti menggunakan wordpress]] 2 tahun lalu, saya pakai //hammerstone// juga. Sayangnya konfigurasi blog saat itu hilang entah ke mana, dan scriptnya sendiri terlalu rumit, jadi saya tulis ulang saja scriptnya. Kodenya ditulis dengan bahasa {{{perl}}}, sengaja, sekadar supaya //edgy// saja. Selain karena sok pintar, saya menulis <<abbr SBG Static Blog Generator>> sendiri supaya bebas memilih sistem templating dan format markup untuk membuat tulisan.
+
+Template blog ini berupa dokumen <<abbr HTML Hypertext Markup Language>> biasa, jadi sambil dibuat bisa dilihat hasilnya langsung dengan browser. Desain tampilan saat ini asal ada saja, stylesheet menggunakan framework [[https://newcss.net/|new.css]], framework CSS tanpa {{{class}}}. Hampir tidak ada kustomisasi yang dilakukan untuk tampilan blog ini, selain mengganti sedikit warna dan ukuran text.
+
+Script generator membaca metadata dan konten dari file <<abbr YAML Yaml Ain't Markup Language>>, menerjemahkan tulisah jadi HTML, kemudian menyisipkan tulisan dan metadata ke bagian dokumen HTML yang sesuai. Proses tersebut dilakukan dengan bantuan [[https://metacpan.org/pod/Mojo::DOM|Mojo::DOM]]. Menggunakan library tersebut, modifikasi dokumen HTML bisa dilakukan dengan cara yang mirip dengan proses modifikasi <<abbr DOM Document Object Model>> menggunakan javascript di browser, jadi lebih mudah.
+
+Tulisan ditulis dalam bahasa markup [[http://www.wikicreole.org/|wiki ceole]]. Library [[https://metacpan.org/pod/Text::WikiCreole|Text::WikiCreole]] digunakan untuk menerjemahkan wiki creole menjadi HTML. Syntax wiki creole tidak memiliki fitur sebanyak, textile, apalagi asciidoc. Untungnya library Text::WikiCreole menyediakan API untuk membuat plugin syntax tambahan. Sejauh ini saya menambahkan syntax untuk membuat element {{{<blockquote>}}}, {{{<figure>}}}, dan {{{<abbr>}}}. Lebih lanjut tentang plugin syntax ini bisa jadi tulisan terpisah.
+
+Server masih mirip seperti sebelumnya, micro instance di <<abbr GCP Google Cloud Platform>>, sambil mencoba region Jakarta yang baru dibuka. Agak mubazir memang kalau sampai buat instance sendiri hanya untuk blog static yang pengunjungnya pun hampir tidak ada. Rencananya saya mau sekalian bereksperimen di sana, jadi ngga apa-apa. Sementara itu, HTTPS server yang dipakai adalah [[https://caddyserver.com|caddyserver]], yang dengannya serfitikat <<abbr TLS Transport Layer Security>> dari Let's Encrypt secara otomatis terkonfigurasi.
+
+Masih banyak yang belum dibuat dan ingin saya tambahkan. Barangkali dalam beberapa waktu ke depan, tulisan di blog ini akan cuma berkisar improvement baru apa yang saya buat di sini. Maklum saja, masih baru, rasanya segala fitur ingin dibuat. Semoga saja script generator yang cuma //single file// bisa sedikit mengerem keinginan tersebut. Supaya lebih banyak menulis saja daripada mengoprek atau gonta-ganti mesin blog.
