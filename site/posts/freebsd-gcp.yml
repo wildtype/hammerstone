@@ -42,6 +42,6 @@ Dari beberapa image yang saya coba, hanya //freebsd-12-0-current-*// yang bisa d
 
 OS yang berjalan di GCE perlu menjalankan beberapa service tambahan untuk integrasi ke berbagai layanan GCP terkait seperti monitoring dan penempatan kunci SSH. Dugaan saya, image FreeBSD versi-versi sebelumnya mengalami bug di service tersebut. Bug tersebut menyebabkan ssh-keys yang kita miliki di GCP tidak dikenali oleh instance, sehingga instance tidak bisa diakses lewat SSH.
 
-Sayang sekali, pasalnya versi release production saat ini adalah versi 11.1, 10.4, dan 10.3. Menggunakan versi 12-current agak merepotkan karena belum release. Misalnya saja, perintah {{qjail install}} tidak bisa langsung berjalan karena basejail hanya tersedia untuk versi release. Soal ini mungkin akan dibahas pada tulisan berikutnya.
+Sayang sekali, pasalnya versi release production saat ini adalah versi 11.1, 10.4, dan 10.3. Menggunakan versi 12-current agak merepotkan karena belum release. Misalnya saja, perintah {{{qjail install}}} tidak bisa langsung berjalan karena basejail hanya tersedia untuk versi release. Soal ini mungkin akan dibahas pada tulisan berikutnya.
 
 Sekian curhat saya.
