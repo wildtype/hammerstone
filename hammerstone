@@ -26,6 +26,8 @@ sub Config {
   {
     SiteName => 'prehistoric.me',
 
+    LayoutFile => "$site_path/templates/layout.html",
+
     IndexTemplateFile => "$site_path/templates/index.html",
     ArchiveTemplateFile => "$site_path/templates/archive.html",
     PostTemplateFile => "$site_path/templates/post.html",
@@ -72,22 +74,39 @@ sub descending_created_at {
   $b->{created_at}->compare($a->{created_at});
 }
 
-sub generate_post_html {
-  my ($template, $post) = @_;
+sub write_article_page {
+  my ($layout, $template, $post) = @_;
+
+  my $layout_dom = Mojo::DOM->new($layout);
   my $post_dom = Mojo::DOM->new($template);
 
-  $post_dom->at('title')->content("$post->{title} | prehistoric.me");
+  my $page_title = "$post->{title} | prehistoric.me";
+  my $page_url = "https://prehistoric.me/$post->{slug}";
+  $layout_dom->at('title')->content($page_title);
+
+  $layout_dom->at('meta[property="og:title"]')->attr(content => $page_title);
+  $layout_dom->at('meta[property="og:type"]')->attr(content => 'article');
+  $layout_dom->at('meta[property="og:url"]')->attr(content => $page_url);
+  $layout_dom->at('meta[property="og:image"]')->attr(content => 'https://storage.googleapis.com/static.prehistoric.me/pictures/tewet.png');
+
+  my $meta_description = substr(Mojo::DOM->new($post->{content})->all_text, 0, 100);
+  $meta_description =~ s/\s+/ /g;
+  $layout_dom->at('meta[property="og:description"]')->attr(content => $meta_description);
+  $layout_dom->at('meta[property="description"]')->attr(content => $meta_description);
+
   $post_dom->at('.post__title')->content($post->{title});
   $post_dom->at('.post__timestamp')->content(
     $post->{created_at}->strftime('%d %B %Y')
   );
   $post_dom->at('.post__content')->content($post->{content});
 
+  $layout_dom->at('header')->append($post_dom);
+
   path(Config->{PostPath}->($post->{slug}))
   ->make_path
   ->child('index.html')
   ->spurt(
-    encode_utf8 $minifier->minify(\$post_dom->to_string, $mini_opts)
+    encode_utf8 $minifier->minify(\$layout_dom->to_string, $mini_opts)
   );
 }
 
@@ -186,22 +205,47 @@ sub setup_creole_wiki_plugin {
 }
 
 sub write_archive_page {
-  my ($html) = @_;
+  my ($layout, $html) = @_;
+
+  my $layout_dom = Mojo::DOM->new($layout);
+
+  $layout_dom->at('title')->content('Archive | prehistoric.me');
+
+  $layout_dom->at('meta[property="og:title"]')->attr(content => 'Archive | prehistoric.me');
+  $layout_dom->at('meta[property="og:type"]')->attr(content => 'website');
+  $layout_dom->at('meta[property="og:url"]')->attr(content => 'https://prehistoric.me/archive');
+  $layout_dom->at('meta[property="og:image"]')->attr(content => 'https://storage.googleapis.com/static.prehistoric.me/pictures/tewet.png');
+  $layout_dom->at('meta[property="og:description"]')->attr(content => 'Yes, I will be read');
+  $layout_dom->at('meta[property="description"]')->attr(content => 'Yes, I will be read');
+
+  $layout_dom->at('header')->append($html);
 
   path(
     Config->{ArchivePath}
   )->make_path->child('index.html')->spurt(
-    encode_utf8 $minifier->minify(\$html, $mini_opts)
+    encode_utf8 $minifier->minify(\$layout_dom->to_string, $mini_opts)
   );
 }
 
 sub write_index_page {
-  my ($html) = @_;
+  my ($layout, $html) = @_;
+
+  my $layout_dom = Mojo::DOM->new($layout);
+  $layout_dom->at('title')->content('prehistoric.me');
+
+  $layout_dom->at('meta[property="og:title"]')->attr(content => 'prehistoric.me -- Yes, I will be read');
+  $layout_dom->at('meta[property="og:type"]')->attr(content => 'website');
+  $layout_dom->at('meta[property="og:url"]')->attr(content => 'https://prehistoric.me');
+  $layout_dom->at('meta[property="og:image"]')->attr(content => 'https://storage.googleapis.com/static.prehistoric.me/pictures/tewet.png');
+  $layout_dom->at('meta[property="og:description"]')->attr(content => 'Yes, I will be read');
+  $layout_dom->at('meta[property="description"]')->attr(content => 'Yes, I will be read');
+
+  $layout_dom->at('header')->append($html);
 
   path(
     Config->{IndexPath}
   )->child('index.html')->spurt(
-    encode_utf8 $minifier->minify(\$html, $mini_opts)
+    encode_utf8 $minifier->minify(\$layout_dom->to_string, $mini_opts)
   );
 }
 
@@ -278,6 +322,10 @@ copy_static_pages;
 
 my @posts = load_all_posts;
 
+my $layout = path(
+  Config->{LayoutFile}
+)->slurp;
+
 my $post_template =  path(
   Config->{PostTemplateFile}
 )->slurp;
@@ -304,7 +352,7 @@ $index_main->content('');
 $post_list->content('');
 
 foreach my $post (@posts) {
-  generate_post_html($post_template, $post);
+  write_article_page($layout, $post_template, $post);
 
   $post_list->append_content(
     article_list_item($list_item_template, $post)
@@ -315,7 +363,7 @@ foreach my $post (@posts) {
   );
 }
 
-write_archive_page($archive_dom->to_string);
+write_archive_page($layout, $archive_dom->to_string);
 write_feed_xml($feed->as_xml);
 
 foreach my $post (@posts[0..4]) {
@@ -324,4 +372,4 @@ foreach my $post (@posts[0..4]) {
   );
 }
 
-write_index_page($index_dom->to_string);
+write_index_page($layout, $index_dom->to_string);
