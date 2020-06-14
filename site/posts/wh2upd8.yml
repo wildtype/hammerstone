@@ -1,0 +1,90 @@
+title: '"Webhook" untuk Mengupdate Blog'
+slug: wh2upd8
+created_at: 2020-06-14T22:40:56+07:00
+--- |-
+Sejak pakai static site generator, saya harus melakukan langkah berikut untuk mengupdate blog ini:
+# Commit tulisan baru dan push ke Github.
+# Login dengan ssh ke instance webserver.
+# Pull perubahan terbaru dari Github.
+# Jalankan //hammerstone// untuk mengupdate halaman blog.
+
+Urusan menulis, bisa diserahkan ke github dengan menggunakan fitur "New File" dan commit langsung. Langkah jadi bisa dipermudah. Tinggal langkah ke-2 sampai 4, selama ini masih dilakukan dari command line. Sudah 2020 kok masih pakai CLI macam tahun 80an saja?...
+--- |-
+Sejak pakai static site generator, saya harus melakukan langkah berikut untuk mengupdate blog ini:
+# Commit tulisan baru dan push ke Github.
+# Login dengan ssh ke instance webserver.
+# Pull perubahan terbaru dari Github.
+# Jalankan //hammerstone// untuk mengupdate halaman blog.
+
+Urusan menulis, bisa diserahkan ke github dengan menggunakan fitur "New File" dan commit langsung. Langkah jadi bisa dipermudah. Tinggal langkah ke-2 sampai 4, selama ini masih dilakukan dari command line. Sudah 2020 kok masih pakai CLI macam tahun 80an saja? Karena itu, dibuatlah endpoint yang ketika diakses akan memicu proses 2 sampai 4 tersebut, semacam webhook.
+
+Pertama, dibuat //shell script// seperti berikut yang fungsinya mengambil revisi terbaru dari github kemudian menjalankan //hammerstone//. Sebelumnya, konfigurasi {{{.bashrc}}} dimuat supaya shell script tersebut memiliki lingkungan yang sama seperti jika perintah dijalankan secara manual, terutama pengaturan lokasi library perl. Perintah {{{git pull}}} bisa berjalan tanpa perlu kunci ssh karena alamat remote menggunakan protokol https dan repository memang bisa terbuka.
+
+<<
+<pre>
+<span class="Comment">#!/bin/bash</span>
+<span class="Comment"># rebuild.sh</span>
+
+<span class="Statement">set</span><span class="Identifier"> </span><span class="Special">-x</span>
+<span class="Statement">source</span> <span class="PreProc">$HOME</span>/.bashrc
+<span class="Statement">cd</span> <span class="PreProc">$HOME</span>/hammerstone
+git pull
+./hammerstone
+<span class="Statement">echo</span><span class="Constant"> Site successfully rebuilt</span>
+</pre>
+>>
+
+Saya juga membuat "aplikasi web" akan menjalankan script di atas. Aplikasinya dibuat dengan //perl// dan library [[https://metacpan.org/pod/Proc::Background|Plack/PSGI]]. Pakai perl, karena generator blog ini sudah pakai perl juga, jadi tidak banyak dependensi tambahan yang perlu diinstall. Aplikasi ini dijalankan dengan perintah {{{plackup}}} di dalam {{{tmux}}}. Nanti saja kapan-kapan aplikasi ini dijalankan sebagai service systemd.
+
+<<
+<pre>
+<span class="PreProc">#!/usr/bin/env perl</span>
+<span class="Comment"># app.psgi</span>
+<span class="Statement">use strict</span>;
+<span class="Statement">use warnings</span>;
+<span class="Statement">use </span>Proc::Background;
+
+<span class="Statement">my</span> <span class="Identifier">$app</span> = <span class="Statement">sub </span>{
+  <span class="Statement">my</span> <span class="Identifier">$proc</span> = Proc::Background-&gt;new(
+    <span class="Constant">q[</span><span class="Constant">bash rebuild.sh 2&gt;&amp;1 |  gawk '{ print strftime(&quot;</span><span class="Constant">[%Y-%m-%d %H:%M:%S]</span><span class="Constant">&quot;), $0 }' &gt;&gt; progress.log</span><span class="Constant">]</span>
+  );
+
+  <span class="Statement">return</span> [<span class="Constant">200</span>, [<span class="Constant">'</span><span class="Constant">Content-type</span><span class="Constant">'</span> =&gt; <span class="Constant">'</span><span class="Constant">text/plain</span><span class="Constant">'</span>], [<span class="Constant">'</span><span class="Constant">Ok</span><span class="Constant">'</span>]];
+};
+</pre>
+>>
+
+[[https://metacpan.org/pod/Proc::Background | Proc::Background]] dipakai untuk menjalankan script {{{rebuild.sh}}} tanpa perlu menunggu hasilnya, sehingga aplikasi web bisa langsung meresponse "Ok" dan request selesai. Hasil dan catatan berjalannya script lengkap dengan timestampnya disimpan di dalam file {{{progress.log}}}
+
+Aplikasi web di atas tidak membedakan path lokasi atau metode HTTP, tanpa autentikasi, dan tidak bisa diakses dari luar. Tugas-tugas itu diserahkan kepada caddyserver. Di dalam {{{Caddyfile}}} saya menambahkan pengaturan seperti ini:
+
+{{{
+@rahasia {
+  method POST
+  path /alamatpalsu
+}
+
+reverse_proxy @rahasia localhost:5000
+
+basicauth /alamatpalsu {
+  admin hashpassword
+}
+}}}
+
+Dengan begitu request POST ke /alamatpalsu akan diteruskan ke aplikasi web yang berlokasi di {{{localhost:5000}}} jika username dan password benar. Nah, supaya bisa dengan gampang mengirim request POST tanpa pakai {{{curl}}} atau HTTP client h4xx0r lainnya, saya membuat bookmark di browser dengan alamat seperti ini.
+{{{
+data:text/html,<form action="https://prehistoric.me/alamatpalsu" method="POST"><button>Upd8 Blog
+}}}
+Jika dibuka, akan ada tombol form yang kalau diklik memicu request POST ke alamat tersebut. Masih harus dijalankan secara manual, kurang ajaib, tapi setidaknya lebih instan daripada saya harus ssh ke webserver dan menjalankan commandline.
+
+Soal keamanan, perlindungannya hanya dengan HTTP Basic Auth. Saya mencoba mencari tahu tentang kemungkinan serangan pada http basic auth, tapi masih belum menemukan selain dengan mecoba-coba atau dictionary attack. Untuk sementara ini saya cuma mengandalkan password yang panjang saja, //finger crossed//. Silakan pembaca [[https://github.com/wildtype/hammerstone/issues/new|melaporkan]] pada saya kalau menemukan issue tentang keamanan ini. 
+<<
+<style>
+.PreProc { color: #c000c0; }
+.Special { color: #c000c0; }
+.Statement { color: #af5f00; }
+.Identifier { color: #008080; }
+.Comment { color: #0000c0; }
+.Constant { color: #c00000; }
+</style>
+>>
