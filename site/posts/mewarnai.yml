@@ -38,7 +38,7 @@ vim <span class="Special">-c</span> <span class="Statement">'</span><span class=
 </pre>
 >>
 
-Seringkali kita sudah mengatur supaya vim memiliki tampilan latar belakang gelap, nantinya dokumen yang dihasilkan akan memiliki latar belakang gelap juga. Supaya terang, bisa ditambahkan pengaturan `background=light`, atau sebaliknya `background=dark` jika ingin menggelapkan hasil.
+Seringkali kita sudah mengatur supaya vim memiliki tampilan latar belakang gelap, nantinya dokumen yang dihasilkan akan memiliki latar belakang gelap juga. Supaya terang, bisa ditambahkan pengaturan {{{background=light}}}, atau sebaliknya {{{background=dark}}} jika ingin menggelapkan hasil.
 
 <<
 <pre>
