@@ -17,21 +17,23 @@ Perintah tersebut akan menghasilkan file //index.js.html//. Jika ingin menyimpan
 vim -c ':TOhtml' -c 'w namafile.html' -c '!qa' index.js
 }}}
 
-Jika ingin tanpa nomer baris, bisa dengan menjalankan pengaturan `set nonumber`, sehingga baris perintahnya seperti berikut ini
+Di situ terlihat kita menjalankan perintah {{{!qa}}} untuk menutup vim secara paksa. Ini karena secara bawaan vim tetap membuka dan menulis file dengan nama //index.js.html//. Kalau tidak dipaksa untuk tutup, vim akan meminta kita menyimpan dulu file tersebut.
+
+Tergantung pengaturan sehari-hari saat menggunakan vim, dokumen yang dihasilkan mungkin dilengkapi dengan nomer baris. Jika ingin tanpa nomer baris, jalankan pengaturan {{{set nonumber}}}. Sebaliknya, jika biasanya tidak ada nomer baris dan ingin dokumen yang dihasilkan dilengkapi nomer baris, jalankan pengaturan {{{set number}}}.
 
 {{{
-vim -c 'set nonumber' -c 'TOhtml' -c 'wqa' index.js
+vim -c 'set nonumber' -c 'TOhtml' -c 'w namafile' -c '!qa' index.js
 }}}
 
-Seringkali kita sudah mengatur supaya vim memiliki background hitam, padahal inginnya... Supaya terang, bisa ditambahkan pengaturan `background=light`
+Seringkali kita sudah mengatur supaya vim memiliki tampilan latar belakang gelap, nantinya dokumen yang dihasilkan akan memiliki latar belakang gelap juga. Supaya terang, bisa ditambahkan pengaturan `background=light`, atau sebaliknya `background=dark` jika ingin menggelapkan hasil.
 
 {{{
-vim -c 'set background=light' -c 'set nonumber' -c 'TOhtml' -c 'wqa' index.js
+vim -c 'set background=light' -c 'set nonumber' -c 'TOhtml' -c 'w namafile' -c '!qa' index.js
 }}}
 
-Adakalanya kita ingin tema warna yang dihasilkan sebagai HTML berbeda dengan yang biasa ditampilkan saat digunakan secara interaktif, ini bisa dilakukan dengan perintah pengaturann `colortheme` sehingga menjadi
+Adakalanya kita ingin tema warna yang dihasilkan sebagai HTML berbeda dengan yang biasa ditampilkan saat digunakan secara interaktif, ini bisa dilakukan dengan perintah pengaturann {{{colorscheme}}}.
 {{{
-vim -c 'colortheme=default' -c 'set background=light' -c 'set nonumber' -c 'TOhtml' -c 'wqa' index.js
+vim -c 'colorscheme default' -c 'set background=light' -c 'set nonumber' -c 'TOhtml' -c 'wqa' index.js
 }}}
 
 === Mengekstrak HTML yang penting saja dan stylesheetnya
