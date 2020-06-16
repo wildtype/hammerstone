@@ -1,0 +1,188 @@
+
+title: Mewarnai Source Code dengan Vim
+slug: mewarnai
+created_at: 2020-06-17T00:30:21+07:00
+--- |-
+Vim bisa dipakai untuk mewarnai //source code//. Mewarnai di sini maksudnya menghasilkan dokumen dengan sisipan elemen {{{<code>}}} atau {{{<pre>}}} yang berwarna, seperti tampilan saat dibuka di IDE atau text editor. CMS atau static site generator biasanya memakai library tambahan untuk bisa menghasilkan kode yang berwarna, seperti [[https://pygments.org/|pygments]], [[http://coderay.rubychan.de/|coderay]], atau [[https://highlightjs.org/|highlightjs]]. Padahal, sudah ada vim, dan karena vim sering dipakai, tentu sudah tersedia tema warna yang paling disukai penulis.
+--- |-
+Vim bisa dipakai untuk mewarnai //source code//. Mewarnai di sini maksudnya menghasilkan dokumen dengan sisipan elemen {{{<code>}}} atau {{{<pre>}}} yang berwarna, seperti tampilan saat dibuka di IDE atau text editor. CMS atau static site generator biasanya memakai library tambahan untuk bisa menghasilkan kode yang berwarna, seperti [[https://pygments.org/|pygments]], [[http://coderay.rubychan.de/|coderay]], atau [[https://highlightjs.org/|highlightjs]]. Padahal, sudah ada vim, dan karena vim sering dipakai, tentu sudah tersedia tema warna yang paling disukai penulis.
+
+Ketika sedang membuka source code dengan vim, misalnya dengan nama //index.js//, menjalankan perintah {{{:TOhtml}}} akan menghasilkan berkas HTML dengan nama index.js.html. Dokumen yang dihasilkan berupa kode yang dibungkus element {{{<pre>}}} dilengkapi dengan stylesheet CSS yang mendefinisikan warna untuk tiap bagian kode.
+
+<<figure
+  lowq.jpeg
+  600
+  Text editor vim setelah menjalankan perintah TOhtml
+>>
+
+=== Otomasi
+Harus membuka file kemudian menjalankan beberapa urutan perintah rasanya merepotkan, apalagi jika dilakukan berulang. Tenang saja, vim sudah mendukung otomasi. Vim bisa dijalankan dari commandline dan langsung menjalankan perintah internal dengan opsi {{{-c}}}. Misal, kita ingin vim membuka file, menjalankan {{{TOhtml}}}, menulis hasilnya, kemudian keluar, kita bisa menjalankan baris perintah berikut:
+
+<<
+<pre>vim <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">TOhtml</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">wqa</span><span class="Statement">'</span> index.js</pre>
+>>
+
+Perintah tersebut akan menghasilkan file //index.js.html//. Jika ingin menyimpan file HTML ke file dengan nama berbeda, kita mesti menambahkan nama filenya sebagai parameter saat menulis.
+
+<<
+<pre>vim <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">TOhtml</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">w namafile.html</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">!qa</span><span class="Statement">'</span> index.js</pre>
+>>
+
+Di situ terlihat kita menjalankan perintah {{{!qa}}} untuk menutup vim secara paksa. Ini karena secara bawaan vim tetap membuka dan menulis file dengan nama //index.js.html//. Kalau tidak dipaksa untuk tutup, vim akan meminta kita menyimpan dulu file tersebut.
+
+Tergantung pengaturan sehari-hari saat menggunakan vim, dokumen yang dihasilkan mungkin dilengkapi dengan nomer baris. Jika ingin tanpa nomer baris, jalankan pengaturan {{{set nonumber}}}. Sebaliknya, jika biasanya tidak ada nomer baris dan ingin dokumen yang dihasilkan dilengkapi nomer baris, jalankan pengaturan {{{set number}}}.
+
+<<
+<pre>
+vim <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">set nonumber</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">TOhtml</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">w namafile</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">!qa</span><span class="Statement">'</span> index.js
+</pre>
+>>
+
+Seringkali kita sudah mengatur supaya vim memiliki tampilan latar belakang gelap, nantinya dokumen yang dihasilkan akan memiliki latar belakang gelap juga. Supaya terang, bisa ditambahkan pengaturan `background=light`, atau sebaliknya `background=dark` jika ingin menggelapkan hasil.
+
+<<
+<pre>
+vim <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">set background=light</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">set nonumber</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">TOhtml</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">w namafile</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">!qa</span><span class="Statement">'</span> index.js
+</pre>
+>>
+
+Adakalanya kita ingin tema warna yang dihasilkan sebagai HTML berbeda dengan yang biasa ditampilkan saat digunakan secara interaktif, ini bisa dilakukan dengan perintah pengaturann {{{colorscheme}}}.
+
+<<
+<pre>
+vim <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">colorscheme default</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">set background=light</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">set nonumber</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">TOhtml</span><span class="Statement">'</span> <span class="Special">-c</span> <span class="Statement">'</span><span class="Constant">wqa</span><span class="Statement">'</span> index.js
+</pre>
+>>
+
+Perintah-perintah tersebut bisa dipersingkat dengan memasukkannya ke dalam shell script, alias, atau definisi function di dalam {{{.bashrc}}} dan semacamnya. Tetapi saya tidak melakukannya, karena ada keperluan lebih lanjut yang sulit untuk dilakukan dengan shell script.
+
+=== Mengekstrak HTML yang penting saja dan stylesheetnya
+
+Hasil dari perintah TOhtml di vim adalah dokumen HTML lengkap dengan //doctype//, header, dan lain-lain. Saya sendiri biasanya hanya membutuhkan bagian kodenya dan CSSnya saja. Untuk mengekstraknya, saya membuat script //perl// dan menggunakan library [[https://metacpan.org/pod/HTML5::DOM|HTML5::DOM]]. Dengan HTML5::DOM, saya mengambil kode HTML dari tag elemen {{{<pre>}}} dan definisi CSS dari elemen {{{<style>}}}.
+
+Pertama, dibuat dulu file //temporary// untuk menentukan tempat menyimpan hasil konversi ke HTML oleh vim.
+
+<<
+<pre>
+<span class="Statement">use </span>File::Temp;
+<span class="Statement">my</span> <span class="Identifier">$temp</span> = File::Temp-&gt;new;
+</pre>
+>>
+
+Kemudian, jalankan perintah vim untuk menghasilkan HTML ke file yang sudah dipersiapkan tadi, baca isi file hasil dan simpan ke variabel {{{$text}}}.
+
+<<
+<pre>
+<span class="Statement">system</span>(
+  <span class="Constant">'</span><span class="Constant">vim</span><span class="Constant">'</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">'</span><span class="Constant">colorscheme default</span><span class="Constant">'</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">'</span><span class="Constant">set nonumber</span><span class="Constant">'</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">'</span><span class="Constant">let g:html_no_progress=1</span><span class="Constant">'</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">'</span><span class="Constant">set background=light</span><span class="Constant">'</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">'</span><span class="Constant">TOhtml</span><span class="Constant">'</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">"</span><span class="Constant">w! </span><span class="Identifier">$temp</span><span class="Constant">"</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">'</span><span class="Constant">qa!</span><span class="Constant">'</span>,
+  <span class="Identifier">$filename</span>
+);
+
+<span class="Statement">my</span> <span class="Identifier">$text</span>;
+
+<span class="Identifier">$temp</span><span class="Identifier">-&gt;seek</span>(<span class="Constant">0</span>, <span class="Constant">0</span>);
+<span class="Statement">while</span>(&lt;<span class="Identifier">$temp</span>&gt;) {
+  <span class="Identifier">$text</span> .= <span class="Identifier">$_</span>;
+}
+</pre>
+>>
+
+Setelah itu, menggunakan library HTML5::DOM, kita ambil kode HTML dari elemen {{{<pre>}}} dan isi CSS dari elemen {{{<style>}}}.
+
+<<
+<pre>
+<span class="Statement">use </span>HTML5::DOM;
+<span class="Statement">my</span> <span class="Identifier">$parser</span> = HTML5::DOM-&gt;new;
+<span class="Statement">my</span> <span class="Identifier">$doc</span> = <span class="Identifier">$parser</span><span class="Identifier">-&gt;parse</span>(<span class="Identifier">$text</span>);
+
+<span class="Statement">my</span> <span class="Identifier">$pre</span> = <span class="Identifier">$doc</span><span class="Identifier">-&gt;at</span>(<span class="Constant">'</span><span class="Constant">pre</span><span class="Constant">'</span>);
+<span class="Statement">my</span> <span class="Identifier">$style</span> = <span class="Identifier">$doc</span><span class="Identifier">-&gt;at</span>(<span class="Constant">'</span><span class="Constant">style</span><span class="Constant">'</span>);
+
+<span class="Statement">my</span> <span class="Identifier">$html</span> = <span class="Identifier">$pre</span><span class="Identifier">-&gt;html</span> . <span class="Constant">"</span><span class="Special">\n</span><span class="Constant">"</span>;
+<span class="Statement">my</span> <span class="Identifier">$css</span> =  <span class="Identifier">$style</span><span class="Identifier">-&gt;firstNode-&gt;nodeValue</span> . <span class="Constant">"</span><span class="Special">\n</span><span class="Constant">"</span>;
+</pre>
+>>
+
+Secara lengkap script tersebut akhirnya seperti ini. Ketika dijalankan, script ini akan menampilkan kode HTML dan CSS di layar shell. Script inilah yang saya pakai untuk membantu menghasilkan teks //source code// berwarna di tulisan blog ini.
+
+<<
+<pre><span class="PreProc">#!/usr/bin/env perl</span>
+<span class="Comment"># vi: ft=perl</span>
+
+<span class="Statement">use strict</span>;
+<span class="Statement">use warnings</span>;
+<span class="Statement">use </span>File::Temp;
+<span class="Statement">use </span>HTML5::DOM;
+
+<span class="Statement">my</span> <span class="Identifier">$text</span>;
+<span class="Statement">my</span> <span class="Identifier">$temp</span>;
+<span class="Statement">my</span> <span class="Identifier">$parser</span>;
+<span class="Statement">my</span> <span class="Identifier">$doc</span>;
+<span class="Statement">my</span> <span class="Identifier">$pre</span>;
+<span class="Statement">my</span> <span class="Identifier">$style</span>;
+
+<span class="Identifier">$temp</span> = File::Temp-&gt;new;
+
+<span class="Statement">print</span> <span class="Constant">"</span><span class="Identifier">$temp</span><span class="Special">\n</span><span class="Constant">"</span>;
+
+<span class="Statement">system</span>(
+  <span class="Constant">'</span><span class="Constant">vim</span><span class="Constant">'</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">'</span><span class="Constant">colorscheme default</span><span class="Constant">'</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">'</span><span class="Constant">set nonumber</span><span class="Constant">'</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">'</span><span class="Constant">let g:html_no_progress=1</span><span class="Constant">'</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">'</span><span class="Constant">set background=light</span><span class="Constant">'</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">'</span><span class="Constant">TOhtml</span><span class="Constant">'</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">"</span><span class="Constant">w! </span><span class="Identifier">$temp</span><span class="Constant">"</span>,
+  <span class="Constant">'</span><span class="Constant">-c</span><span class="Constant">'</span>, <span class="Constant">'</span><span class="Constant">qa!</span><span class="Constant">'</span>,
+  <span class="Identifier">$ARGV[</span><span class="Constant">0</span><span class="Identifier">]</span>
+);
+
+<span class="Identifier">$temp</span><span class="Identifier">-&gt;seek</span>(<span class="Constant">0</span>, <span class="Constant">0</span>);
+
+
+<span class="Statement">while</span>(&lt;<span class="Identifier">$temp</span>&gt;) {
+  <span class="Identifier">$text</span> .= <span class="Identifier">$_</span>;
+}
+
+<span class="Identifier">$parser</span> = HTML5::DOM-&gt;new;
+<span class="Identifier">$doc</span> = <span class="Identifier">$parser</span><span class="Identifier">-&gt;parse</span>(<span class="Identifier">$text</span>);
+
+<span class="Identifier">$pre</span> = <span class="Identifier">$doc</span><span class="Identifier">-&gt;at</span>(<span class="Constant">'</span><span class="Constant">pre</span><span class="Constant">'</span>);
+<span class="Identifier">$style</span> = <span class="Identifier">$doc</span><span class="Identifier">-&gt;at</span>(<span class="Constant">'</span><span class="Constant">style</span><span class="Constant">'</span>);
+
+<span class="Identifier">$pre</span><span class="Identifier">-&gt;removeAttr</span>(<span class="Constant">'</span><span class="Constant">id</span><span class="Constant">'</span>);
+
+<span class="Statement">print</span> <span class="Identifier">$pre</span><span class="Identifier">-&gt;html</span> . <span class="Constant">"</span><span class="Special">\n</span><span class="Constant">"</span>;
+<span class="Statement">print</span> <span class="Identifier">$style</span><span class="Identifier">-&gt;firstNode-&gt;nodeValue</span> . <span class="Constant">"</span><span class="Special">\n</span><span class="Constant">"</span>;
+</pre>
+>>
+
+<<figure
+  tohtml-shell1.png
+  600
+  Script //tohtml// saat dijalankan, tampilan HTML yang dihasilkan untuk disalin-tempel  (output dipotong)
+>>
+
+<<figure
+  tohtml-shell2.png
+  600
+  Script //tohtml// saat dijalankan, tampilan CSS yang dihasilkan untuk disalin-tempel  (output dipotong)
+>>
+
+<<
+<style>
+.Special { color: #c000c0; }
+.Statement { color: #af5f00; }
+.Constant { color: #c00000; }
+.Identifier { color: #008080; }
+.PreProc { color: #c000c0; }
+.Comment { color: #0000c0; }
+</style>
+>>
