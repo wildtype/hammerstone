@@ -16,6 +16,7 @@ use Encode qw(encode_utf8 decode_utf8);
 use HTML::Packer;
 use String::Util 'trim';
 use XML::Feed;
+use HTML::Escape;
 
 my $minifier = HTML::Packer->init;
 my $mini_opts = { remove_newlines => 1 };
@@ -165,6 +166,11 @@ sub load_all_posts {
   );
 }
 
+sub build_blockquote_tag {
+  my ($words) = @_;
+  return '<blockquote>'.trim(creole_parse($words)).'</blockquote>'; 
+}
+
 sub build_figure_tag {
     my ($src, $size, $caption) = split /\s+/, $_[0], 3;
 
@@ -186,19 +192,24 @@ sub build_abbr_tag {
   return qq[<abbr title="$title">$abbr</abbr>];
 }
 
+sub build_code_tag {
+  return '<code>' . escape_html(trim $_[0]) . '</code>';
+}
+
 sub setup_creole_wiki_plugin {
   my $plugin = sub {
     my ($tag, $words) = split /\s+/, $_[0], 2;
 
-    if ($tag eq 'bq') {
-      return '<blockquote>'.trim(creole_parse($words)).'</blockquote>';
-    } elsif ($tag eq 'abbr') {
-      return build_abbr_tag($words);
-    } elsif ($tag eq 'figure') {
-      return build_figure_tag($words);
-    } else {
-      return $_[0];
-    }
+    my $methods = {
+      bq => \&build_blockquote_tag,
+      abbr => \&build_abbr_tag,
+      figure => \&build_figure_tag,
+      c => \&build_code_tag
+    };
+
+    my $method = $methods->{$tag} || sub { return $_[0]; };
+
+    return $method->($words);
   };
 
   creole_plugin($plugin);
