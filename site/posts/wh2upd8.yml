@@ -78,13 +78,4 @@ data:text/html,<form action="https://prehistoric.me/alamatpalsu" method="POST"><
 Jika dibuka, akan ada tombol form yang kalau diklik memicu request POST ke alamat tersebut. Masih harus dijalankan secara manual, kurang ajaib, tapi setidaknya lebih instan daripada saya harus ssh ke webserver dan menjalankan commandline.
 
 Soal keamanan, perlindungannya hanya dengan HTTP Basic Auth. Saya mencoba mencari tahu tentang kemungkinan serangan pada http basic auth, tapi masih belum menemukan selain dengan mecoba-coba atau dictionary attack. Untuk sementara ini saya cuma mengandalkan password yang panjang saja, //finger crossed//. Silakan pembaca [[https://github.com/wildtype/hammerstone/issues/new|melaporkan]] pada saya kalau menemukan issue tentang keamanan ini. 
-<<
-<style>
-.PreProc { color: #c000c0; }
-.Special { color: #c000c0; }
-.Statement { color: #af5f00; }
-.Identifier { color: #008080; }
-.Comment { color: #0000c0; }
-.Constant { color: #c00000; }
-</style>
->>
+

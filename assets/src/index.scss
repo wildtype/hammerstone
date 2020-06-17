@@ -35,6 +35,7 @@ a {
 
 body {
   font-size: 1.2rem;
+  max-width: 840px;
 }
 
 .blogroll {
@@ -77,3 +78,11 @@ body {
     font-style: italic;
   }
 }
+
+/* VIM: color scheme */
+.Special { color: #c000c0; }
+.Statement { color: #af5f00; }
+.Constant { color: #c00000; }
+.Identifier { color: #008080; }
+.PreProc { color: #c000c0; }
+.Comment { color: #0000c0; }
