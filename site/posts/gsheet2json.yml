@@ -46,7 +46,7 @@ Script tersebut kemudian akan menghasilkan data JSON seperti berikut ini:
 ]
 }}}
 
-Aturannya, data JSON yang dihasilkan berupa array object, dengan baris pertama pada spreadsheet sebagai key/attribute object, kemudian barus ke-2 dan seterusnya menampung nilai tiap attribut.
+Aturannya, data JSON yang dihasilkan berupa array object, dengan baris pertama pada spreadsheet sebagai key/attribute object, kemudian baris ke-2 dan seterusnya menampung nilai tiap attribut.
 
 Seperti inilah script yang saya buat:
 
