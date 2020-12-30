@@ -1,0 +1,121 @@
+title: Membaca Data dari Google Sheet dan Mengubahnya Menjadi JSON
+slug: gsheet2json
+created_at: 2020-12-30T23:20:00+07:00
+--- |-
+Saya membuat script untuk membaca berkas spreadsheet di Google Sheet, misalnya seperti ini:
+
+<<figure
+  sheet.png
+  600
+  Google Sheet Document
+>>
+
+Script tersebut kemudian akan menghasilkan data JSON seperti berikut ini:
+
+{{{
+[
+  { "nama": "Soekarno", "tahun_mulai": "1945", "tahun_udahan": "1967" },
+  { "nama": "Suharto", "tahun_mulai": "1967", "tahun_udahan": "1998" },
+  { "nama": "Habibi", "tahun_mulai": "1998", "tahun_udahan": "1999" },
+  { "nama": "Megawati", "tahun_mulai": "1999", "tahun_udahan": "2004" },
+  { "nama": "SBY", "tahun_mulai": "2004", "tahun_udahan": "2014" },
+  { "nama": "Jokowi", "tahun_mulai": "2014", "tahun_udahan": "masih njabat" }
+]
+}}}
+
+Aturannya, data JSON yang dihasilkan berupa array object, dengan baris pertama pada spreadsheet sebagai key/attribute object, kemudian barus ke-2 dan seterusnya menampung nilai tiap attribut.
+--- |-
+Saya membuat script untuk membaca berkas spreadsheet di Google Sheet, misalnya seperti ini:
+
+<<figure
+  sheet.png
+  600
+  Google Sheet Document
+>>
+
+Script tersebut kemudian akan menghasilkan data JSON seperti berikut ini:
+
+{{{
+[
+  { "nama": "Soekarno", "tahun_mulai": "1945", "tahun_udahan": "1967" },
+  { "nama": "Suharto", "tahun_mulai": "1967", "tahun_udahan": "1998" },
+  { "nama": "Habibi", "tahun_mulai": "1998", "tahun_udahan": "1999" },
+  { "nama": "Megawati", "tahun_mulai": "1999", "tahun_udahan": "2004" },
+  { "nama": "SBY", "tahun_mulai": "2004", "tahun_udahan": "2014" },
+  { "nama": "Jokowi", "tahun_mulai": "2014", "tahun_udahan": "masih njabat" }
+]
+}}}
+
+Aturannya, data JSON yang dihasilkan berupa array object, dengan baris pertama pada spreadsheet sebagai key/attribute object, kemudian barus ke-2 dan seterusnya menampung nilai tiap attribut.
+
+Seperti inilah script yang saya buat:
+
+<<
+<pre><span class="PreProc">import</span> json
+<span class="PreProc">from</span> oauth2client.client <span class="PreProc">import</span> GoogleCredentials
+<span class="PreProc">from</span> googleapiclient.discovery <span class="PreProc">import</span> build
+
+DOCUMENT_ID = <span class="Constant">'</span><span class="Constant">1V27aexn_E4H2iANUsbcy9RU9Y0fQrjsH0pLk2Iauh2U</span><span class="Constant">'</span>
+SHEET_RANGE = <span class="Constant">'</span><span class="Constant">Sheet1</span><span class="Constant">'</span>
+
+credential = GoogleCredentials.get_application_default()
+service = build(<span class="Constant">'</span><span class="Constant">sheets</span><span class="Constant">'</span>, <span class="Constant">'</span><span class="Constant">v4</span><span class="Constant">'</span>, credentials=credential)
+sheet = service.spreadsheets()
+
+sheet_content = sheet.values()<span class="Special">\</span>
+                  .get(
+                    spreadsheetId=DOCUMENT_ID,
+                    <span class="Identifier">range</span>=SHEET_RANGE,
+                    majorDimension=<span class="Constant">'</span><span class="Constant">ROWS</span><span class="Constant">'</span>
+                  ).execute()
+
+rows = sheet_content[<span class="Constant">'</span><span class="Constant">values</span><span class="Constant">'</span>]
+result = [
+           { key:row[index] <span class="Statement">for</span> index, key <span class="Statement">in</span> <span class="Identifier">enumerate</span>(rows[<span class="Constant">0</span>]) }
+           <span class="Statement">for</span> row <span class="Statement">in</span> rows[<span class="Constant">1</span>::]
+         ]
+
+<span class="Identifier">print</span>(json.dumps(result))
+</pre>
+>>
+
+=== Otorisasi
+
+Sebelum script tersebut bisa dijalankan, perlu dilakukan beberapa hal terkait otentikasi dan otorisasi untuk mengakses data dari Google Sheet, terutama jika sebelumnya belum pernah menggunakan fitur API Google Sheet.
+
+Langkah pertama adalah membuat GCP Project (jika belum punya), kemudian menghidupkan fitur API Google Sheet. Dari GCP Console, masuk ke menu //APIs & Services//, kemudian tekan tombol //ENABLE APIS AND SERVICES//. Dari pilihan services yang tersedia, pilih //Google Sheets API//, kemudian klik //ENABLE//. Setelah ini, kita bisa menggunakan fitur Google Sheet API dari project GCP kita.
+
+Langkah berikutnya adalah membuat //Service Account//. Saya memilih menggunakan //Service Account// sebagai credential untuk otentikasi karena lebih mudah mengaturnya dan penggunaannya pun instan. Untuk membuat Service Account, dari GCP console, masuk ke menu //IAM & ADMIN// >> //Service Account//, kemudian tekan tombol //CREATE SERVICE ACCOUNT//.
+
+<<figure
+  service-accounts.png
+  600
+  Daftar dan Pengaturan Service Accounts
+>>
+
+Dari form yang tersedia, kita akan diminta untuk mengisi nama //Service Account// yang akan dibuat. Nama inilah yang nanti akan menjadi alamat email //Service Account// yang bisa diberikan hak akses untuk membaca dokumen Google Sheet. Setelah membuat //Service Account//, dari daftar yang tersedia, pilih menu action //Create key// kemudian klik //CREATE// pada dialog yang muncul. Kita akan diberikan file JSON yang berisi kunci untuk otentikasi. Dengan kunci tersebut, script kita akan dijalankan dan melakukan request API Google Sheet sebagai Service Account tadi. Simpan baik-baik file JSON tersebut.
+
+Langkah terakhir adalah mengijinkan //Service Account// yang baru dibuat tadi untuk mengakses dokumen Google Sheet. Dari halaman dokumen Google Sheet, klik menu //Share//, kemudian masukkan alamat email //Service Account// yang sudah dibuat tadi ke dalam input yang tersedia.
+
+<<figure
+  hak-akses.png
+  600
+  Memberikan Hak Akses pada Service Account untuk Membaca (dan Menulis) Dokumen Google Sheet
+>>
+
+=== Cara menjalankan script
+
+Dari script di atas, baris berikut ini perlu diubah sesuai //Document Id// (ada di url Google Sheet) dan nama sheet yang benar:
+
+<<
+<pre>
+DOCUMENT_ID = <span class="Constant">'</span><span class="Constant">1V27aexn_E4H2iANUsbcy9RU9Y0fQrjsH0pLk2Iauh2U</span><span class="Constant">'</span>
+SHEET_RANGE = <span class="Constant">'</span><span class="Constant">Sheet1</span><span class="Constant">'</span>
+</pre>
+>>
+
+Kemudian, sebelum script dijalankan, perlu diatur environment variable {{{GOOGLE_APPLICATION_CREDENTIAL}}} dengan nilai lokasi file JSON kunci //Service Account// yang sebelumnya sudah dibuat. Environment variable bisa juga diatur sambil menjalankan script seperti ini:
+
+{{{
+GOOGLE_APPLICATION_CREDENTIALS=/lokasi/file/service-account.json python main.py
+}}}
