@@ -18,9 +18,6 @@ use String::Util 'trim';
 use XML::Feed;
 use HTML::Escape;
 
-my $minifier = HTML::Packer->init;
-my $mini_opts = { remove_newlines => 1 };
-
 sub Config {
   my $site_path = 'site';
 
@@ -34,20 +31,183 @@ sub Config {
     PostTemplateFile => "$site_path/templates/post.html",
 
     PostSrcGlob => "$site_path/posts/*.yml",
-    PostPath => sub { "$site_path/public/$_[0]" },
 
     ArchivePath => "$site_path/public/archive",
     IndexPath => "$site_path/public",
-    FeedPath => "$site_path/public/feed",
-
-    Statics => {
-      about => "$site_path/templates/about.html",
-      blogroll => "$site_path/templates/blogroll.html"
-    },
-
-    ImageBaseUri => "https://storage.googleapis.com/static.prehistoric.me/pictures/"
+    FeedPath => "$site_path/public/feed"
   };
 }
+
+package Hammerstone {
+  use String::Util 'trim';
+  use HTML::Escape;
+  use Data::Dumper;
+  use Mojo::File 'path';
+
+  sub new {
+    my ($class, $config) = @_;
+
+    my $self = bless $config, $class;
+
+    return $self->__init;
+  }
+
+  sub minify_html {
+    my $self = shift;
+    my $html = shift;
+
+    return $self->{minifier}->minify(\$html, { remove_newlines => 1 });
+  }
+
+  sub clean_public_dir {
+    path('public')->remove_tree({keep_root => 1});
+  }
+
+  sub copy_static_pages {
+    my $self = shift;
+
+    foreach my $page (keys %{$self->{static_pages}}) {
+      path(
+        $self->{index_path} . "/$page"
+      )->make_path;
+
+      path(
+        $self->{static_pages}->{$page}
+      )->copy_to(
+        $self->{index_path} . "/$page/index.html"
+      );
+    }
+  }
+
+  sub post_path {
+    my $self = shift;
+    my $slug = shift;
+
+    return "site/public/$slug";
+  }
+
+  sub feed_index {
+    my $self = shift;
+
+    my $feed = XML::Feed->new('RSS', version => '2.0');
+    $feed->title('Prehistoric.Me');
+    $feed->tagline('Ya, aku bakal dibaca');
+    $feed->base('https://prehistoric.me/');
+    $feed->link('https://prehistoric.me/feed/index.xml');
+    $feed->self_link('https://prehistoric.me/feed/index.xml');
+    $feed->author('Mufti');
+    $feed->language('id');
+    $feed->generator('hammerstone');
+    $feed->modified(DateTime->now);
+
+    $feed;
+  }
+
+  sub feed_item {
+    my $self = shift;
+    my $item = shift;
+
+    my $dt = $item->{created_at}->clone;
+    $dt->set_time_zone('UTC');
+
+    my $entry = XML::Feed::Entry->new;
+    my $entry_link = 'https://prehistoric.me/' . $item->{slug};
+
+    $entry->id('https://prehistoric.me/' . $item->{slug});
+    $entry->link($entry_link);
+    $entry->title($item->{title});
+    $entry->modified($dt);
+    $entry->issued($dt);
+    $entry->author('dev-null@prehistoric.me (Mufti)');
+
+    my $content;
+    if (defined $item->{excerpt}) {
+      $content = $item->{excerpt} . "<a href=\"$entry_link\">(lanjutkan membaca...)</a>";
+    } else {
+      $content = $item->{content};
+    }
+
+    $entry->content($content);
+
+    $entry;
+  }
+
+  sub __init {
+    my $self = shift;
+
+    my $minifier = HTML::Packer->init;
+
+    $self->{minifier} = $minifier;
+    $self->__setup_creole_wiki_plugin;
+
+    return $self;
+  }
+
+  sub __setup_creole_wiki_plugin {
+    my $self = shift;
+
+    my $plugin = sub {
+      my ($tag, $words) = split /\s+/, $_[0], 2;
+
+      my $build_blockquote_tag = sub {
+        my ($words) = @_;
+        return '<blockquote>'.trim(Text::WikiCreole::creole_parse($words)).'</blockquote>';
+      };
+
+      my $build_figure_tag = sub {
+        my ($src, $size, $caption) = split /\s+/, $_[0], 3;
+
+        my $width = ($size eq 'auto') ? 'auto' : ($size . 'px');
+        my $caption_html = trim(Text::WikiCreole::creole_parse($caption));
+        my $img_src = $self->{image_base_uri} . $src;
+
+        return <<~HTML;
+        <figure style="max-width: $width">
+        <img src="$img_src" />
+        <figcaption>$caption_html</figcaption>
+        </figure>
+        HTML
+      };
+
+      my $build_abbr_tag = sub  {
+        my ($abbr, $title) = split /\s+/, $_[0], 2;
+
+        return qq[<abbr title="$title">$abbr</abbr>];
+      };
+
+      my $build_code_tag = sub {
+        return '<code>' . escape_html(trim $_[0]) . '</code>';
+      };
+      my $methods = {
+        bq => $build_blockquote_tag,
+        abbr => $build_abbr_tag,
+        figure => $build_figure_tag,
+        c => $build_code_tag
+      };
+
+      my $method = $methods->{$tag} || sub { return $_[0]; };
+
+      return $method->($words);
+    };
+
+    Text::WikiCreole::creole_plugin($plugin);
+  }
+}
+
+my $hammerstone = Hammerstone->new(
+  {
+    image_base_uri => 'https://storage.googleapis.com/static.prehistoric.me/pictures/',
+    static_pages => {
+      about => 'site/templates/about.html',
+      blogroll => 'site/templates/blogroll.html',
+    },
+    index_path => 'site/public',
+  },
+);
+
+$hammerstone->clean_public_dir;
+$hammerstone->copy_static_pages;
+
 
 sub load_post_from_yaml {
   my $file_content = path($_)->slurp;
@@ -103,11 +263,11 @@ sub write_article_page {
 
   $layout_dom->at('header')->append($post_dom);
 
-  path(Config->{PostPath}->($post->{slug}))
+  path($hammerstone->post_path($post->{slug}))
   ->make_path
   ->child('index.html')
   ->spurt(
-    encode_utf8 $minifier->minify(\$layout_dom->to_string, $mini_opts)
+    encode_utf8 $hammerstone->minify_html($layout_dom->to_string)
   );
 }
 
@@ -155,64 +315,11 @@ sub article_excerpt_for_index {
   $article;
 }
 
-sub clean_public_dir {
-  path('public')->remove_tree({keep_root => 1});
-}
-
 sub load_all_posts {
   sort descending_created_at map(
     load_post_from_yaml,
     glob(Config->{PostSrcGlob})
   );
-}
-
-sub build_blockquote_tag {
-  my ($words) = @_;
-  return '<blockquote>'.trim(creole_parse($words)).'</blockquote>'; 
-}
-
-sub build_figure_tag {
-    my ($src, $size, $caption) = split /\s+/, $_[0], 3;
-
-    my $width = ($size eq 'auto') ? 'auto' : ($size . 'px');
-    my $caption_html = trim(creole_parse($caption));
-    my $img_src = Config->{ImageBaseUri} . $src;
-
-    return <<HTML;
-<figure style="max-width: $width">
-  <img src="$img_src" />
-  <figcaption>$caption_html</figcaption>
-</figure>
-HTML
-}
-
-sub build_abbr_tag {
-  my ($abbr, $title) = split /\s+/, $_[0], 2;
-
-  return qq[<abbr title="$title">$abbr</abbr>];
-}
-
-sub build_code_tag {
-  return '<code>' . escape_html(trim $_[0]) . '</code>';
-}
-
-sub setup_creole_wiki_plugin {
-  my $plugin = sub {
-    my ($tag, $words) = split /\s+/, $_[0], 2;
-
-    my $methods = {
-      bq => \&build_blockquote_tag,
-      abbr => \&build_abbr_tag,
-      figure => \&build_figure_tag,
-      c => \&build_code_tag
-    };
-
-    my $method = $methods->{$tag} || sub { return $_[0]; };
-
-    return $method->($words);
-  };
-
-  creole_plugin($plugin);
 }
 
 sub write_archive_page {
@@ -234,7 +341,7 @@ sub write_archive_page {
   path(
     Config->{ArchivePath}
   )->make_path->child('index.html')->spurt(
-    encode_utf8 $minifier->minify(\$layout_dom->to_string, $mini_opts)
+    encode_utf8 $hammerstone->minify_html($layout_dom->to_string)
   );
 }
 
@@ -256,7 +363,7 @@ sub write_index_page {
   path(
     Config->{IndexPath}
   )->child('index.html')->spurt(
-    encode_utf8 $minifier->minify(\$layout_dom->to_string, $mini_opts)
+    encode_utf8 $hammerstone->minify_html($layout_dom->to_string)
   );
 }
 
@@ -266,70 +373,9 @@ sub write_feed_xml {
   path(
     Config->{FeedPath}
   )->make_path->child('index.xml')->spurt(
-    encode_utf8 $minifier->minify(\$xml, $mini_opts)
+    encode_utf8 $hammerstone->minify_html($xml)
   );
 }
-
-sub build_feed_index {
-  my $feed = XML::Feed->new('RSS', version => '2.0');
-  $feed->title('Prehistoric.Me');
-  $feed->tagline('Ya, aku bakal dibaca');
-  $feed->base('https://prehistoric.me/');
-  $feed->link('https://prehistoric.me/feed/index.xml');
-  $feed->self_link('https://prehistoric.me/feed/index.xml');
-  $feed->author('Mufti');
-  $feed->language('id');
-  $feed->generator('hammerstone');
-  $feed->modified(DateTime->now);
-
-  $feed;
-}
-
-sub build_feed_item {
-  my ($item) = @_;
-
-  my $dt = $item->{created_at}->clone;
-  $dt->set_time_zone('UTC');
-
-  my $entry = XML::Feed::Entry->new;
-  my $entry_link = 'https://prehistoric.me/' . $item->{slug};
-
-  $entry->id('https://prehistoric.me/' . $item->{slug});
-  $entry->link($entry_link);
-  $entry->title($item->{title});
-  $entry->modified($dt);
-  $entry->issued($dt);
-  $entry->author('dev-null@prehistoric.me (Mufti)');
-
-  my $content; 
-  if (defined $item->{excerpt}) {
-    $content = $item->{excerpt} . "<a href=\"$entry_link\">(lanjutkan membaca...)</a>";
-  } else {
-    $content = $item->{content};
-  }
-
-  $entry->content($content);
-
-  $entry;
-}
-
-sub copy_static_pages {
-  foreach my $page (keys %{Config->{Statics}}) {
-    path(
-      Config->{IndexPath} . "/$page"
-    )->make_path;
-
-    path(
-      Config->{Statics}->{$page}
-    )->copy_to(
-      Config->{IndexPath} . "/$page/index.html"
-    );
-  }
-}
-
-setup_creole_wiki_plugin;
-clean_public_dir;
-copy_static_pages;
 
 my @posts = load_all_posts;
 
@@ -349,7 +395,7 @@ my $index_template = path(
   Config->{IndexTemplateFile}
 )->slurp;
 
-my $feed = build_feed_index;
+my $feed = $hammerstone->feed_index;
 
 my $archive_dom = Mojo::DOM->new($archive_template);
 my $list_item_template = $archive_dom->at('.post-list__item');
@@ -370,7 +416,7 @@ foreach my $post (@posts) {
   );
 
   $feed->add_entry(
-    build_feed_item($post)
+    $hammerstone->feed_item($post)
   );
 }
 
