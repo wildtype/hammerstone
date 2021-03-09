@@ -10,11 +10,9 @@ use Mojo::DOM;
 use Mojo::File 'path';
 
 use YAML;
-use Text::WikiCreole;
 use DateTime::Format::ISO8601;
 use Encode qw(encode_utf8 decode_utf8);
 use HTML::Packer;
-use String::Util 'trim';
 use XML::Feed;
 use HTML::Escape;
 
@@ -30,7 +28,6 @@ sub Config {
     ArchiveTemplateFile => "$site_path/templates/archive.html",
     PostTemplateFile => "$site_path/templates/post.html",
 
-    PostSrcGlob => "$site_path/posts/*.yml",
 
     ArchivePath => "$site_path/public/archive",
     IndexPath => "$site_path/public",
@@ -38,11 +35,209 @@ sub Config {
   };
 }
 
-package Hammerstone {
+{
+  package Post;
+  use Mojo::File 'path';
+  use YAML;
+  use DateTime::Format::ISO8601;
+  use Encode qw(encode_utf8 decode_utf8);
+  use Text::WikiCreole;
+  use String::Util 'trim';
+  use HTML::Escape;
+
+  our $AUTOLOAD;
+
+  sub new {
+    my $class = shift;
+    my $config = shift;
+    my $self = bless $config, $class;
+
+    return $self;
+  }
+
+  sub AUTOLOAD : lvalue {
+    my $self = shift;
+    my $rvalue = shift;
+
+    my $method = $AUTOLOAD;
+    $method =~ s/Post:://;
+
+    die "NoMethodError: $method" unless (
+      grep /^$method$/, qw(title slug content excerpt created_at DESTROY)
+    );
+
+    if (defined $rvalue) {
+      $self->{$method} = $rvalue;
+    }
+
+    return $self->{$method};
+  }
+
+  sub load_all {
+    my $class = shift;
+    my $post_src_glob = shift;
+
+    my $descending_by_created_at = sub {
+      $b->created_at->compare($a->created_at);
+    };
+
+    return sort $descending_by_created_at map(
+      $class->__load_from_yaml($_),
+      glob($post_src_glob)
+    );
+  }
+
+  sub __load_from_yaml {
+    my $class = shift;
+    my $yaml = shift;
+
+    my $file_content = path($yaml)->slurp;
+    my ($metadata, $excerpt,  $content) = Load($file_content);
+
+    my $created_at = DateTime::Format::ISO8601
+      ->parse_datetime($metadata->{created_at});
+    $created_at->set_locale('id-ID');
+    $created_at->set_time_zone('Asia/Jakarta');
+
+    my $post = $class->new({
+      title       => $metadata->{title},
+      slug        => $metadata->{slug},
+    });
+
+    $post->created_at = $created_at;
+
+    if (defined $content) {
+      $post->content = decode_utf8 creole_parse $content;
+      $post->excerpt = decode_utf8 creole_parse $excerpt;
+    } else {
+      $post->content = decode_utf8 creole_parse $excerpt;
+      $post->excerpt = undef;
+    }
+
+    return $post;
+  }
+}
+
+{
+  package Page;
+  use Mojo::DOM;
+  use Encode qw(encode_utf8 decode_utf8);
+
+  sub new {
+    my ($class, $config) = @_;
+    my $self = bless $config, $class;
+    return $self->__init;
+  }
+
+  sub template {
+    my $self = shift;
+    return $self->{template};
+  }
+
+  sub layout {
+    my $self = shift;
+    return $self->{layout};
+  }
+
+  sub __init {
+    my $self = shift;
+
+    $self->{template} = Mojo::DOM->new($self->{template_file});
+    $self->{layout} = Mojo::DOM->new($self->{layout_file});
+
+    return $self;
+  }
+}
+
+{
+  package PostPage;
+  use base 'Page';
+  use Encode qw(encode_utf8 decode_utf8);
+  use Mojo::File 'path';
+
+  sub post {
+    my $self = shift;
+    return $self->{post};
+  }
+
+  sub meta_description {
+    my $self = shift;
+    return substr(
+      Mojo::DOM->new($self->{post}->content)->all_text, 0, 100
+    ) =~ s/\s+/ /gr;
+  }
+
+  sub title {
+    my $self = shift;
+    return $self->post->title . ' | prehistoric.me';
+  }
+
+  sub url {
+    my $self = shift;
+    return 'https://prehistoric.me/' . $self->post->slug;
+  }
+
+  sub file_path {
+    my $self = shift;
+    return 'site/public/' . $self->post->slug;
+  }
+
+  sub render {
+    my $self = shift;
+    return $self->{rendered} if $self->{rendered};
+
+    $self->__write_metadata;
+
+    $self->template->at('.post__title')->content($self->post->title);
+    $self->template->at('.post__timestamp')->content(
+      $self->post->created_at->strftime('%d %B %Y')
+    );
+    $self->template->at('.post__content')->content($self->post->content);
+    $self->layout->at('header')->append($self->template);
+
+    $self->{rendered} = $self->{minifier}->($self->layout->to_string);
+
+    return $self->{rendered};
+  }
+
+  sub write_file {
+    my $self = shift;
+
+    path($self->file_path)
+      ->make_path
+      ->child('index.html')
+      ->spurt(encode_utf8 $self->render);
+  }
+
+  sub __write_metadata {
+    my $self = shift;
+    return $self if $self->{metadata_written};
+
+    $self->layout->at('title')->content($self->title);
+    $self->layout->at('meta[property="og:title"]')->attr(content => $self->title);
+    $self->layout->at('meta[property="og:type"]')->attr(content => 'article');
+    $self->layout->at('meta[property="og:url"]')->attr(content => $self->url);
+    $self->layout->at('meta[property="og:image"]')->attr(
+      content => 'https://storage.googleapis.com/static.prehistoric.me/pictures/tewet.png'
+    );
+    $self->layout->at('meta[property="og:description"]')->attr(content => $self->meta_description);
+    $self->layout->at('meta[property="description"]')->attr(content => $self->meta_description);
+
+    $self->{metadata_written} = 1;
+
+    return $self;
+  }
+}
+
+{
+  package Hammerstone;
+  use YAML;
+  use Text::WikiCreole;
   use String::Util 'trim';
   use HTML::Escape;
   use Data::Dumper;
   use Mojo::File 'path';
+  use Encode qw(encode_utf8 decode_utf8);
 
   sub new {
     my ($class, $config) = @_;
@@ -150,15 +345,15 @@ package Hammerstone {
       my ($tag, $words) = split /\s+/, $_[0], 2;
 
       my $build_blockquote_tag = sub {
-        my ($words) = @_;
-        return '<blockquote>'.trim(Text::WikiCreole::creole_parse($words)).'</blockquote>';
+        my ($quoted) = @_;
+        return '<blockquote>'.trim(creole_parse($quoted)).'</blockquote>';
       };
 
       my $build_figure_tag = sub {
         my ($src, $size, $caption) = split /\s+/, $_[0], 3;
 
         my $width = ($size eq 'auto') ? 'auto' : ($size . 'px');
-        my $caption_html = trim(Text::WikiCreole::creole_parse($caption));
+        my $caption_html = trim(creole_parse($caption));
         my $img_src = $self->{image_base_uri} . $src;
 
         return <<~HTML;
@@ -190,86 +385,32 @@ package Hammerstone {
       return $method->($words);
     };
 
-    Text::WikiCreole::creole_plugin($plugin);
+    creole_plugin($plugin);
   }
 }
 
 my $hammerstone = Hammerstone->new(
   {
     image_base_uri => 'https://storage.googleapis.com/static.prehistoric.me/pictures/',
-    static_pages => {
-      about => 'site/templates/about.html',
+    static_pages   => {
+      about    => 'site/templates/about.html',
       blogroll => 'site/templates/blogroll.html',
     },
-    index_path => 'site/public',
+    index_path     => 'site/public',
+    post_src_glob  => "site/posts/*.yml",
+
+    site_title     => 'Prehistoric.Me',
+    site_tagline   => 'Ya, aku bakal dibaca',
+    site_base      => 'https://prehistoric.me/',
+    site_feed_link => 'https://prehistoric.me/feed/index.xml',
+    site_author    => 'Mufti',
+    site_language  => 'id',
+    site_generator => 'hammerstone',
   },
 );
 
 $hammerstone->clean_public_dir;
 $hammerstone->copy_static_pages;
-
-
-sub load_post_from_yaml {
-  my $file_content = path($_)->slurp;
-  my ($metadata, $excerpt,  $content) = Load($file_content);
-
-  my $created_at = DateTime::Format::ISO8601
-                     ->parse_datetime($metadata->{created_at});
-  $created_at->set_locale('id-ID');
-  $created_at->set_time_zone('Asia/Jakarta');
-
-  my $post = $metadata;
-  $post->{created_at} = $created_at;
-  if (defined $content) {
-    $post->{content} = decode_utf8 creole_parse $content;
-    $post->{excerpt} = decode_utf8 creole_parse $excerpt;
-  } else {
-    $post->{content} = decode_utf8 creole_parse $excerpt;
-    $post->{excerpt} = undef;
-  }
-
-  $post;
-}
-
-sub descending_created_at {
-  $b->{created_at}->compare($a->{created_at});
-}
-
-sub write_article_page {
-  my ($layout, $template, $post) = @_;
-
-  my $layout_dom = Mojo::DOM->new($layout);
-  my $post_dom = Mojo::DOM->new($template);
-
-  my $page_title = "$post->{title} | prehistoric.me";
-  my $page_url = "https://prehistoric.me/$post->{slug}";
-  $layout_dom->at('title')->content($page_title);
-
-  $layout_dom->at('meta[property="og:title"]')->attr(content => $page_title);
-  $layout_dom->at('meta[property="og:type"]')->attr(content => 'article');
-  $layout_dom->at('meta[property="og:url"]')->attr(content => $page_url);
-  $layout_dom->at('meta[property="og:image"]')->attr(content => 'https://storage.googleapis.com/static.prehistoric.me/pictures/tewet.png');
-
-  my $meta_description = substr(Mojo::DOM->new($post->{content})->all_text, 0, 100);
-  $meta_description =~ s/\s+/ /g;
-  $layout_dom->at('meta[property="og:description"]')->attr(content => $meta_description);
-  $layout_dom->at('meta[property="description"]')->attr(content => $meta_description);
-
-  $post_dom->at('.post__title')->content($post->{title});
-  $post_dom->at('.post__timestamp')->content(
-    $post->{created_at}->strftime('%d %B %Y')
-  );
-  $post_dom->at('.post__content')->content($post->{content});
-
-  $layout_dom->at('header')->append($post_dom);
-
-  path($hammerstone->post_path($post->{slug}))
-  ->make_path
-  ->child('index.html')
-  ->spurt(
-    encode_utf8 $hammerstone->minify_html($layout_dom->to_string)
-  );
-}
 
 sub article_list_item {
   my ($template, $post) = @_;
@@ -313,13 +454,6 @@ sub article_excerpt_for_index {
   $article->append_content('<hr>');
 
   $article;
-}
-
-sub load_all_posts {
-  sort descending_created_at map(
-    load_post_from_yaml,
-    glob(Config->{PostSrcGlob})
-  );
 }
 
 sub write_archive_page {
@@ -377,7 +511,7 @@ sub write_feed_xml {
   );
 }
 
-my @posts = load_all_posts;
+my @posts = Post->load_all($hammerstone->{post_src_glob});
 
 my $layout = path(
   Config->{LayoutFile}
@@ -409,7 +543,14 @@ $index_main->content('');
 $post_list->content('');
 
 foreach my $post (@posts) {
-  write_article_page($layout, $post_template, $post);
+  PostPage->new(
+    {
+      layout_file   => $layout,
+      template_file => $post_template,
+      minifier      => sub { $hammerstone->minify_html(@_) },
+      post          => $post
+    }
+  )->write_file;
 
   $post_list->append_content(
     article_list_item($list_item_template, $post)
