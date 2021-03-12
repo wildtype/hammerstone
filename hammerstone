@@ -30,8 +30,7 @@ sub Config {
 
 
     ArchivePath => "$site_path/public/archive",
-    IndexPath => "$site_path/public",
-    FeedPath => "$site_path/public/feed"
+    IndexPath => "$site_path/public"
   };
 }
 
@@ -255,7 +254,8 @@ sub Config {
   }
 
   sub clean_public_dir {
-    path('site/public')->remove_tree({keep_root => 1});
+    my $self = shift;
+    path($self->{index_path})->remove_tree({keep_root => 1});
   }
 
   sub copy_static_pages {
@@ -274,6 +274,17 @@ sub Config {
     }
   }
 
+  sub write_feed_file {
+    my $self = shift;
+
+    path($self->{feed_path})
+      ->make_path
+      ->child('index.xml')
+      ->spurt(
+      encode_utf8($self->minify_html($self->feed->as_xml))
+    );
+  }
+
   sub add_feed_item {
     my $self = shift;
     my $item = shift;
@@ -282,14 +293,14 @@ sub Config {
     $dt->set_time_zone('UTC');
 
     my $entry = XML::Feed::Entry->new;
-    my $entry_link = 'https://prehistoric.me/' . $item->slug;
+    my $entry_link = $self->{site_base} . $item->slug;
 
-    $entry->id('https://prehistoric.me/' . $item->slug);
+    $entry->id($entry_link);
     $entry->link($entry_link);
     $entry->title($item->title);
     $entry->modified($dt);
     $entry->issued($dt);
-    $entry->author('dev-null@prehistoric.me (Mufti)');
+    $entry->author($self->{site_author_full});
 
     my $content;
     if (defined $item->excerpt) {
@@ -304,27 +315,20 @@ sub Config {
     return $self;
   }
 
-  sub post_path {
-    my $self = shift;
-    my $slug = shift;
-
-    return "site/public/$slug";
-  }
-
   sub feed {
     my $self = shift;
 
     return $self->{feed} if $self->{feed};
 
     $self->{feed} = XML::Feed->new('RSS', version => '2.0');
-    $self->{feed}->title('Prehistoric.Me');
-    $self->{feed}->tagline('Ya, aku bakal dibaca');
-    $self->{feed}->base('https://prehistoric.me/');
-    $self->{feed}->link('https://prehistoric.me/feed/index.xml');
-    $self->{feed}->self_link('https://prehistoric.me/feed/index.xml');
-    $self->{feed}->author('Mufti');
-    $self->{feed}->language('id');
-    $self->{feed}->generator('hammerstone');
+    $self->{feed}->title($self->{site_title});
+    $self->{feed}->tagline($self->{site_tagline});
+    $self->{feed}->base($self->{site_base});
+    $self->{feed}->link($self->{site_feed_link});
+    $self->{feed}->self_link($self->{site_feed_link});
+    $self->{feed}->author($self->{site_author});
+    $self->{feed}->language($self->{site_language});
+    $self->{feed}->generator($self->{site_generator});
     $self->{feed}->modified(DateTime->now);
 
     return $self->{feed};
@@ -409,6 +413,7 @@ my $hammerstone = Hammerstone->new(
       blogroll => 'site/templates/blogroll.html',
     },
     index_path     => 'site/public',
+    feed_path      => "site/public/feed",
     post_src_glob  => "site/posts/*.yml",
 
     site_title     => 'Prehistoric.Me',
@@ -416,6 +421,7 @@ my $hammerstone = Hammerstone->new(
     site_base      => 'https://prehistoric.me/',
     site_feed_link => 'https://prehistoric.me/feed/index.xml',
     site_author    => 'Mufti',
+    site_author_full => 'dev-null@prehistoric.me (Mufti)',
     site_language  => 'id',
     site_generator => 'hammerstone',
   },
@@ -513,16 +519,6 @@ sub write_index_page {
   );
 }
 
-sub write_feed_xml {
-  my ($xml) = @_;
-
-  path(
-    Config->{FeedPath}
-  )->make_path->child('index.xml')->spurt(
-    encode_utf8 $hammerstone->minify_html($xml)
-  );
-}
-
 my @posts = Post->load_all($hammerstone->{post_src_glob});
 
 my $layout = path(
@@ -569,7 +565,6 @@ foreach my $post (@posts) {
 }
 
 write_archive_page($layout, $archive_dom->to_string);
-write_feed_xml($hammerstone->feed->as_xml);
 
 foreach my $post (@posts[0..4]) {
   $index_main->append_content(
@@ -578,3 +573,4 @@ foreach my $post (@posts[0..4]) {
 }
 
 write_index_page($layout, $index_dom->to_string);
+$hammerstone->write_feed_file;
