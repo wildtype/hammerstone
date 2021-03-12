@@ -255,7 +255,7 @@ sub Config {
   }
 
   sub clean_public_dir {
-    path('public')->remove_tree({keep_root => 1});
+    path('site/public')->remove_tree({keep_root => 1});
   }
 
   sub copy_static_pages {
@@ -274,6 +274,36 @@ sub Config {
     }
   }
 
+  sub add_feed_item {
+    my $self = shift;
+    my $item = shift;
+
+    my $dt = $item->created_at->clone;
+    $dt->set_time_zone('UTC');
+
+    my $entry = XML::Feed::Entry->new;
+    my $entry_link = 'https://prehistoric.me/' . $item->slug;
+
+    $entry->id('https://prehistoric.me/' . $item->slug);
+    $entry->link($entry_link);
+    $entry->title($item->title);
+    $entry->modified($dt);
+    $entry->issued($dt);
+    $entry->author('dev-null@prehistoric.me (Mufti)');
+
+    my $content;
+    if (defined $item->excerpt) {
+      $content = $item->excerpt . "<a href=\"$entry_link\">(lanjutkan membaca...)</a>";
+    } else {
+      $content = $item->content;
+    }
+
+    $entry->content($content);
+    $self->feed->add_entry($entry);
+
+    return $self;
+  }
+
   sub post_path {
     my $self = shift;
     my $slug = shift;
@@ -281,50 +311,32 @@ sub Config {
     return "site/public/$slug";
   }
 
-  sub feed_index {
+  sub feed {
     my $self = shift;
 
-    my $feed = XML::Feed->new('RSS', version => '2.0');
-    $feed->title('Prehistoric.Me');
-    $feed->tagline('Ya, aku bakal dibaca');
-    $feed->base('https://prehistoric.me/');
-    $feed->link('https://prehistoric.me/feed/index.xml');
-    $feed->self_link('https://prehistoric.me/feed/index.xml');
-    $feed->author('Mufti');
-    $feed->language('id');
-    $feed->generator('hammerstone');
-    $feed->modified(DateTime->now);
+    return $self->{feed} if $self->{feed};
 
-    $feed;
+    $self->{feed} = XML::Feed->new('RSS', version => '2.0');
+    $self->{feed}->title('Prehistoric.Me');
+    $self->{feed}->tagline('Ya, aku bakal dibaca');
+    $self->{feed}->base('https://prehistoric.me/');
+    $self->{feed}->link('https://prehistoric.me/feed/index.xml');
+    $self->{feed}->self_link('https://prehistoric.me/feed/index.xml');
+    $self->{feed}->author('Mufti');
+    $self->{feed}->language('id');
+    $self->{feed}->generator('hammerstone');
+    $self->{feed}->modified(DateTime->now);
+
+    return $self->{feed};
   }
 
-  sub feed_item {
+  sub posts {
     my $self = shift;
-    my $item = shift;
 
-    my $dt = $item->{created_at}->clone;
-    $dt->set_time_zone('UTC');
+    return $self->{posts} if $self->{posts};
+    $self->{posts} = Post->load_all($self->{post_src_glob});
 
-    my $entry = XML::Feed::Entry->new;
-    my $entry_link = 'https://prehistoric.me/' . $item->{slug};
-
-    $entry->id('https://prehistoric.me/' . $item->{slug});
-    $entry->link($entry_link);
-    $entry->title($item->{title});
-    $entry->modified($dt);
-    $entry->issued($dt);
-    $entry->author('dev-null@prehistoric.me (Mufti)');
-
-    my $content;
-    if (defined $item->{excerpt}) {
-      $content = $item->{excerpt} . "<a href=\"$entry_link\">(lanjutkan membaca...)</a>";
-    } else {
-      $content = $item->{content};
-    }
-
-    $entry->content($content);
-
-    $entry;
+    return $self->{posts};
   }
 
   sub __init {
@@ -529,8 +541,6 @@ my $index_template = path(
   Config->{IndexTemplateFile}
 )->slurp;
 
-my $feed = $hammerstone->feed_index;
-
 my $archive_dom = Mojo::DOM->new($archive_template);
 my $list_item_template = $archive_dom->at('.post-list__item');
 my $post_list = $archive_dom->at('.post-list');
@@ -551,18 +561,15 @@ foreach my $post (@posts) {
       post          => $post
     }
   )->write_file;
+  $hammerstone->add_feed_item($post);
 
   $post_list->append_content(
     article_list_item($list_item_template, $post)
   );
-
-  $feed->add_entry(
-    $hammerstone->feed_item($post)
-  );
 }
 
 write_archive_page($layout, $archive_dom->to_string);
-write_feed_xml($feed->as_xml);
+write_feed_xml($hammerstone->feed->as_xml);
 
 foreach my $post (@posts[0..4]) {
   $index_main->append_content(
