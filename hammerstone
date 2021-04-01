@@ -240,9 +240,7 @@ sub Config {
 
   sub new {
     my ($class, $config) = @_;
-
     my $self = bless $config, $class;
-
     return $self->__init;
   }
 
@@ -281,7 +279,7 @@ sub Config {
       ->make_path
       ->child('index.xml')
       ->spurt(
-      encode_utf8($self->minify_html($self->feed->as_xml))
+      encode_utf8($self->minify_html($self->{feed}->as_xml))
     );
   }
 
@@ -310,28 +308,9 @@ sub Config {
     }
 
     $entry->content($content);
-    $self->feed->add_entry($entry);
+    $self->{feed}->add_entry($entry);
 
     return $self;
-  }
-
-  sub feed {
-    my $self = shift;
-
-    return $self->{feed} if $self->{feed};
-
-    $self->{feed} = XML::Feed->new('RSS', version => '2.0');
-    $self->{feed}->title($self->{site_title});
-    $self->{feed}->tagline($self->{site_tagline});
-    $self->{feed}->base($self->{site_base});
-    $self->{feed}->link($self->{site_feed_link});
-    $self->{feed}->self_link($self->{site_feed_link});
-    $self->{feed}->author($self->{site_author});
-    $self->{feed}->language($self->{site_language});
-    $self->{feed}->generator($self->{site_generator});
-    $self->{feed}->modified(DateTime->now);
-
-    return $self->{feed};
   }
 
   sub posts {
@@ -350,6 +329,26 @@ sub Config {
 
     $self->{minifier} = $minifier;
     $self->__setup_creole_wiki_plugin;
+    $self->__init_feed;
+
+    return $self;
+  }
+
+  sub __init_feed {
+    my $self = shift;
+
+    return $self->{feed} if $self->{feed};
+
+    $self->{feed} = XML::Feed->new('RSS', version => '2.0');
+    $self->{feed}->title($self->{site_title});
+    $self->{feed}->tagline($self->{site_tagline});
+    $self->{feed}->base($self->{site_base});
+    $self->{feed}->link($self->{site_feed_link});
+    $self->{feed}->self_link($self->{site_feed_link});
+    $self->{feed}->author($self->{site_author});
+    $self->{feed}->language($self->{site_language});
+    $self->{feed}->generator($self->{site_generator});
+    $self->{feed}->modified(DateTime->now);
 
     return $self;
   }
