@@ -2,7 +2,12 @@
 <html lang="id">
   <head>
     <title>prehistoric.me</title>
-    <link href="https://storage.googleapis.com/static.prehistoric.me/assets/index.css" rel="stylesheet" />
+    <link rel="preload"
+          href="https://storage.googleapis.com/static.prehistoric.me/assets/index.css"
+          as="style" onload="this.onload=null;this.rel='stylesheet';">
+    <noscript>
+      <link href="https://storage.googleapis.com/static.prehistoric.me/assets/index.css" rel="stylesheet" />
+    </noscript>
     <link rel="alternate" type="application/rss+xml" href="https://prehistoric.me/feed/index.xml" title="prehistoric.me » Feed" />
     <link rel="shortcut icon" href="https://storage.googleapis.com/static.prehistoric.me/pictures/favicon.png">
     <meta charset="UTF-8" />
@@ -20,5 +25,6 @@
       <h1><a href="/">prehistoric.me</a></h1>
     </header>
     <p><a href="/">Halaman depan</a> / <a href="/archive">Semua Tulisan</a> / <a href="/about">Perihal</a> / <a href="/blogroll">Blogroll</a></p>
+<style>body{font-size:1.2rem;max-width:840px;margin:0 auto; }figure{margin:auto}</style>
   </body>
 </html>
