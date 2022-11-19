@@ -6,4 +6,4 @@ requires 'HTML::Escape';
 requires 'String::Util';
 requires 'YAML';
 requires 'XML::Feed';
-requires 'HTML5::DOM'
+requires 'HTML5::DOM';

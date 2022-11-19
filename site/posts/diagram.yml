@@ -1,0 +1,120 @@
+title: Mudah Membuat Diagram dengan Kroki dan Vim
+slug: diagram
+created_at: 2022-11-12T19:05:00+07:00
+--- |-
+Kadang saya perlu membuat diagram, seperti flowchart atau [[https://en.wikipedia.org/wiki/Sequence_diagram|sequence diagram]]. Dalam membuat diagram biasanya saya menggunakan sintaks [[https://plantuml.com|PlantUML]]. Ada beberapa perangkat yang bisa dipakai untuk menulis kode diagram dan melihat tampilan digramnya secara instan, misal dengan menggunakan website plantuml.com atau dengan fasitilitas edit code dari draw.io. Buat saya, semua perangkat tersebut memiliki kelemahan yang sama, yaitu editornya bukan vi(m). Singkatnya, yang saya inginkan adalah mengetikan sintaks diagram dari editor vim (atau editor apapun yang punya keymap seperti vim), dan bisa melihat hasilnya secara (hampir) realtime.
+
+Setelah bereksperimen beberapa kali, saya pun membuat //work-flow// yang sampai sekarang paling mudah dan praktis untuk menulis diagram.
+--- |-
+Kadang saya perlu membuat diagram, seperti flowchart atau [[https://en.wikipedia.org/wiki/Sequence_diagram|sequence diagram]]. Dalam membuat diagram biasanya saya menggunakan sintaks [[https://plantuml.com|PlantUML]].  Ada beberapa perangkat yang bisa dipakai untuk menulis kode diagram dan melihat tampilan digramnya secara instan, misal dengan menggunakan website plantuml.com atau dengan fasitilitas edit code dari draw.io. Semua perangkat tersebut memiliki kelemahan yang sama, yaitu editornya bukan vi(m). Singkatnya, yang diinginkan adalah cara untuk mengetik sintaks diagram dari editor vim (atau editor apapun yang punya keymap seperti vim), dan bisa melihat hasilnya secara (hampir) realtime.
+
+Setelah bereksperimen beberapa kali, saya pun membuat //workflow// yang sampai sekarang paling mudah dan praktis untuk menulis diagram. Proses konversi menjadi gambar diagram dilakukan dengan [[https://kroki.io|kroki]]. Kroki dipilih karena mendukung berbagai macam sintaks dan jenis diagram, dan tersedia dalam bentuk file //jar// yang bisa dijalankan langsung dengan java. Kemudian saya membuat file template HTML yang berisi tempat kita menuliskan sintask diagram dan perintah JS untuk mengonversi sintaks tersebut menjadi gambar diagram melalui HTTP call ke kroki. Isi file template tersebut seperti ini.
+
+<<<
+  <pre><span class="Identifier">&lt;</span><span class="Statement">html</span><span class="Identifier">&gt;</span>
+  <span class="Identifier">&lt;</span><span class="Statement">script</span><span class="Identifier"> </span><span class="Type">type</span><span class="Identifier">=</span><span class="Constant">"text/plain"</span><span class="Identifier"> </span><span class="Type">id</span><span class="Identifier">=</span><span class="Constant">"source"</span><span class="Identifier">&gt;</span>
+  <span class="Special">@startuml</span>
+  <span class="Special">actor Saya as s</span>
+  <span class="Special">participant Disk as d</span>
+  <span class="Special">participant Browser as b</span>
+  <span class="Special">participant Kroki.jar as k</span>
+  <span class="Special">participant kakakaka</span>
+
+<span class="Special">s -&gt; s: Buka file diagram.html</span>
+<span class="Special">s -&gt; s: Jalankan kroki.jar di shell</span>
+<span class="Special">s -&gt; s: Ketik sintaks diagram di editor</span>
+<span class="Special">s -&gt; d: Save file</span>
+<span class="Special">s -&gt; b: Buka file diagram.html di browser</span>
+  <span class="Special">loop refresh setiap </span>5<span class="Special"> detik</span>
+<span class="Special">  b -&gt; d: Muat isi file terkini</span>
+<span class="Special">  d </span><span class="Comment">--&gt;</span><span class="Special"> b: Isi file terkini</span>
+<span class="Special">  b -&gt; k: Kirimkan sintaks diagram</span>
+<span class="Special">  k </span><span class="Comment">--&gt;</span><span class="Special"> b: Respon dengan gambar diagram</span>
+<span class="Special">  b -&gt; s: Tampilkan gambar diagram</span>
+  <span class="Special">end</span>
+  <span class="Special">@enduml</span>
+  <span class="Identifier">&lt;/</span><span class="Statement">script</span><span class="Identifier">&gt;</span>
+
+  <span class="Identifier">&lt;</span><span class="Statement">body</span><span class="Identifier">&gt;</span>
+  <span class="Identifier">&lt;</span><span class="Statement">form</span><span class="Identifier"> </span><span class="Type">autocomplete</span><span class="Identifier">=</span><span class="Constant">"on"</span><span class="Identifier">&gt;</span>
+  <span class="Identifier">&lt;</span><span class="Statement">fieldset</span><span class="Identifier">&gt;</span>
+  <span class="Identifier">&lt;</span><span class="Statement">legend</span><span class="Identifier">&gt;</span>Configs<span class="Identifier">&lt;/</span><span class="Statement">legend</span><span class="Identifier">&gt;</span>
+  <span class="Identifier">&lt;</span><span class="Statement">input</span><span class="Identifier"> </span><span class="Type">type</span><span class="Identifier">=</span><span class="Constant">"checkbox"</span><span class="Identifier"> </span><span class="Type">name</span><span class="Identifier">=</span><span class="Constant">"autoreload"</span><span class="Identifier"> </span><span class="Type">id</span><span class="Identifier">=</span><span class="Constant">"cbAutoReload"</span><span class="Identifier"> </span><span class="Type">checked</span><span class="Identifier">/&gt;&lt;</span><span class="Statement">label</span><span class="Identifier"> </span><span class="Type">for</span><span class="Identifier">=</span><span class="Constant">"cbAutoReload"</span><span class="Identifier">&gt;</span>Autoreload<span class="Identifier">&lt;/</span><span class="Statement">label</span><span class="Identifier">&gt;</span>
+  <span class="Identifier">&lt;</span><span class="Statement">input</span><span class="Identifier"> </span><span class="Type">type</span><span class="Identifier">=</span><span class="Constant">"radio"</span><span class="Identifier"> </span><span class="Type">name</span><span class="Identifier">=</span><span class="Constant">"format"</span><span class="Identifier"> </span><span class="Type">value</span><span class="Identifier">=</span><span class="Constant">"png"</span><span class="Identifier"> </span><span class="Type">id</span><span class="Identifier">=</span><span class="Constant">"rdPng"</span><span class="Identifier">/&gt;&lt;</span><span class="Statement">label</span><span class="Identifier"> </span><span class="Type">for</span><span class="Identifier">=</span><span class="Constant">"rdPng"</span><span class="Identifier">&gt;</span>png<span class="Identifier">&lt;/</span><span class="Statement">label</span><span class="Identifier">&gt;</span>
+  <span class="Identifier">&lt;</span><span class="Statement">input</span><span class="Identifier"> </span><span class="Type">type</span><span class="Identifier">=</span><span class="Constant">"radio"</span><span class="Identifier"> </span><span class="Type">name</span><span class="Identifier">=</span><span class="Constant">"format"</span><span class="Identifier"> </span><span class="Type">value</span><span class="Identifier">=</span><span class="Constant">"svg"</span><span class="Identifier"> </span><span class="Type">id</span><span class="Identifier">=</span><span class="Constant">"rdSvg"</span><span class="Identifier"> </span><span class="Type">checked</span><span class="Identifier">/&gt;&lt;</span><span class="Statement">label</span><span class="Identifier"> </span><span class="Type">for</span><span class="Identifier">=</span><span class="Constant">"rdSvg"</span><span class="Identifier">&gt;</span>svg<span class="Identifier">&lt;/</span><span class="Statement">label</span><span class="Identifier">&gt;</span>
+  <span class="Identifier">&lt;/</span><span class="Statement">fieldset</span><span class="Identifier">&gt;</span>
+  <span class="Identifier">&lt;/</span><span class="Statement">form</span><span class="Identifier">&gt;</span>
+  <span class="Identifier">&lt;</span><span class="Statement">div</span><span class="Identifier"> </span><span class="Type">id</span><span class="Identifier">=</span><span class="Constant">"result"</span><span class="Identifier">&gt;</span><span class="Identifier">&lt;/</span><span class="Statement">div</span><span class="Identifier">&gt;</span>
+  <span class="Identifier">&lt;</span><span class="Statement">script</span><span class="Identifier">&gt;</span>
+  <span class="Special">      </span><span class="Statement">const</span><span class="Special"> resultContainer = </span><span class="Statement">document</span><span class="Special">.getElementById</span>(<span class="Constant">'result'</span>)<span class="Special">;</span>
+  <span class="Special">      </span><span class="Statement">const</span><span class="Special"> cbAutoReload = </span><span class="Statement">document</span><span class="Special">.getElementById</span>(<span class="Constant">'cbAutoReload'</span>)<span class="Special">;</span>
+  <span class="Special">      </span><span class="Statement">const</span><span class="Special"> rdSvg = </span><span class="Statement">document</span><span class="Special">.getElementById</span>(<span class="Constant">'rdSvg'</span>)<span class="Special">;</span>
+  
+  <span class="Special">      </span><span class="Identifier">function</span><span class="Special"> png</span>()<span class="Special"> </span><span class="Identifier">{</span>
+  <span class="Special">        </span><span class="Statement">const</span><span class="Special"> source = </span><span class="Statement">document</span><span class="Special">.querySelector</span>(<span class="Constant">'#source'</span>)<span class="Special">.innerHTML;</span>
+
+<span class="Special">        fetch</span>(<span class="Constant">'<a href="http://localhost:8000/plantuml/png">http://localhost:8000/plantuml/png</a>'</span><span class="Special">, </span><span class="Identifier">{</span><span class="Special"> method: </span><span class="Constant">'POST'</span><span class="Special">, body: source </span><span class="Identifier">}</span>)
+  <span class="Special">          .then</span>(<span class="Special">response =&gt; response.blob</span>())
+  <span class="Special">          .then</span>(<span class="Special">imageBlob =&gt; </span><span class="Identifier">{</span>
+  <span class="Special">            </span><span class="Statement">const</span><span class="Special"> imageUrl = URL.createObjectURL</span>(<span class="Special">imageBlob</span>)<span class="Special">;</span>
+  <span class="Special">            resultContainer.innerHTML = </span><span class="Constant">`&lt;img src="</span><span class="Special">${imageUrl}</span><span class="Constant">" /&gt;`</span><span class="Special">;</span>
+  <span class="Special">          </span><span class="Identifier">}</span>)<span class="Special">;</span>
+  <span class="Special">      </span><span class="Identifier">}</span>
+  
+  <span class="Special">      </span><span class="Identifier">function</span><span class="Special"> svg</span>()<span class="Special"> </span><span class="Identifier">{</span>
+  <span class="Special">        </span><span class="Statement">const</span><span class="Special"> source = </span><span class="Statement">document</span><span class="Special">.querySelector</span>(<span class="Constant">'#source'</span>)<span class="Special">.innerHTML;</span>
+
+<span class="Special">        fetch</span>(<span class="Constant">'<a href="http://localhost:8000/plantuml/svg">http://localhost:8000/plantuml/svg</a>'</span><span class="Special">, </span><span class="Identifier">{</span><span class="Special"> method: </span><span class="Constant">'POST'</span><span class="Special">, body: source </span><span class="Identifier">}</span>)
+  <span class="Special">          .then</span>(<span class="Special">response =&gt; response.text</span>())
+  <span class="Special">          .then</span>(<span class="Special">bodyText =&gt; </span><span class="Identifier">{</span><span class="Special"> resultContainer.innerHTML = bodyText; </span><span class="Identifier">}</span>)<span class="Special">;</span>
+  <span class="Special">      </span><span class="Identifier">}</span>
+  
+  
+  <span class="Special">      </span><span class="Identifier">function</span><span class="Special"> storeFormat</span>()<span class="Special"> </span><span class="Identifier">{</span>
+  <span class="Special">          </span><span class="Statement">if</span><span class="Special"> </span>(<span class="Special">rdSvg.checked</span>)<span class="Special"> </span><span class="Identifier">{</span>
+  <span class="Special">            localStorage.setItem</span>(<span class="Constant">'isSvg'</span><span class="Special">, </span><span class="Constant">'true'</span>)<span class="Special">;</span>
+  <span class="Special">          </span><span class="Identifier">}</span><span class="Special"> </span><span class="Statement">else</span><span class="Special"> </span><span class="Identifier">{</span>
+  <span class="Special">            localStorage.setItem</span>(<span class="Constant">'isSvg'</span><span class="Special">, </span><span class="Constant">'false'</span>)<span class="Special">;</span>
+  <span class="Special">          </span><span class="Identifier">}</span>
+  <span class="Special">      </span><span class="Identifier">}</span>
+  
+  <span class="Special">      </span><span class="Identifier">function</span><span class="Special"> loadFormat</span>()<span class="Special"> </span><span class="Identifier">{</span>
+  <span class="Special">        </span><span class="Statement">const</span><span class="Special"> formatIsSvg = localStorage.getItem</span>(<span class="Constant">'isSvg'</span>)<span class="Special">;</span>
+  
+  <span class="Special">        </span><span class="Statement">if</span><span class="Special"> </span>(<span class="Special">formatIsSvg === </span><span class="Constant">'true'</span>)<span class="Special"> </span><span class="Identifier">{</span>
+  <span class="Special">          rdSvg.checked = </span><span class="Constant">true</span><span class="Special">;</span>
+  <span class="Special">        </span><span class="Identifier">}</span><span class="Special"> </span><span class="Statement">else</span><span class="Special"> </span><span class="Identifier">{</span>
+  <span class="Special">          rdPng.checked = </span><span class="Constant">true</span><span class="Special">;</span>
+  <span class="Special">        </span><span class="Identifier">}</span>
+  <span class="Special">      </span><span class="Identifier">}</span>
+  
+  <span class="Special">      </span><span class="Identifier">function</span><span class="Special"> loadImage</span>()<span class="Special"> </span><span class="Identifier">{</span>
+  <span class="Special">        loadFormat</span>()<span class="Special">;</span>
+  
+  <span class="Special">        </span><span class="Statement">if</span><span class="Special"> </span>(<span class="Special">rdSvg.checked</span>)<span class="Special"> </span><span class="Identifier">{</span>
+  <span class="Special">          svg</span>()<span class="Special">;</span>
+  <span class="Special">        </span><span class="Identifier">}</span><span class="Special"> </span><span class="Statement">else</span><span class="Special"> </span><span class="Identifier">{</span>
+  <span class="Special">          png</span>()<span class="Special">;</span>
+  <span class="Special">        </span><span class="Identifier">}</span>
+  <span class="Special">      </span><span class="Identifier">}</span>
+  
+  <span class="Special">      loadImage</span>()<span class="Special">;</span>
+  <span class="Special">      setInterval</span>(()<span class="Special"> =&gt; </span><span class="Identifier">{</span>
+  <span class="Special">        </span><span class="Statement">if</span><span class="Special"> </span>(<span class="Special">cbAutoReload.checked</span>)<span class="Special"> </span><span class="Identifier">{</span>
+  <span class="Special">          storeFormat</span>()<span class="Special">;</span>
+  <span class="Special">          </span><span class="Statement">window</span><span class="Special">.</span><span class="Statement">location</span><span class="Special">.reload</span>()<span class="Special">;</span>
+  <span class="Special">        </span><span class="Identifier">}</span>
+  <span class="Special">      </span><span class="Identifier">}</span><span class="Special">, </span>5000)<span class="Special">;</span>
+  <span class="Special">    </span><span class="Identifier">&lt;/</span><span class="Statement">script</span><span class="Identifier">&gt;</span>
+  <span class="Identifier">&lt;/</span><span class="Statement">body</span><span class="Identifier">&gt;</span>
+  <span class="Identifier">&lt;/</span><span class="Statement">html</span><span class="Identifier">&gt;</span>
+  </pre>
+>>>
+
+Bisa dilihat kode diagram ditulis di antara block {{{<script type="text/plain" id="source"></script>}}}. Isi block script tersebut itu dikirimkan ke server lokal kroki dengan method {{{fetch()}}} via HTTP. Ada checkbox dan radio button untuk mengatur format yang diinginkan dan apakah tampilan perlu diperbarui secara berkala. Gambaran prosesnya kira-kira seperti ini:
+
+<<<
+<figure style="max-width: 600px"><img src="index.png"><figcaption><p><em>Sequence Diagram</em> cara kerja dibuatnya diagram ini.</p></figcaption></figure>
+>>>
+
+Pembaruan tampilan dilakukan secara berkala tiap 5 detik dengan melakukan reload halaman secara penuh. Ini dilakukan supaya perubahan terkini pada isi block script bisa dimuat ulang untuk kemudian dikirimkan ke server kroki. Jika ingin mengubah format sintaks yang digunakan dan jenis diagram yang dihasilkan, bisa dilakukan dengan mengubah path yang dipanggil oleh method {{{fetch()}}}. Daftar lengkapnya bisa dicek di halaman web [[https://kroki.io/#support|kroki]].
