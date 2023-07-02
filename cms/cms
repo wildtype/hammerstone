@@ -1,0 +1,48 @@
+#!/usr/bin/env perl
+use Mojolicious::Lite -signatures;
+use Mojo::File 'path';
+use YAML;
+
+sub get_title {
+  my $file = shift;
+  my $content = $file->slurp;
+
+  my ($meta, $_excerpt, $_body) = Load($content);
+  return $meta->{title};
+}
+
+sub posts {
+  my $path = path('../site/posts');
+  my @posts = $path
+    ->list({dir => 1})
+    ->map(sub { { title => get_title($_) }; } );
+  return @posts;
+}
+
+get '/' => sub ($c) {
+  $c->render(template => 'index');
+};
+
+get '/posts' => sub ($c) {
+  my @listdir = posts;
+
+  my $resp = {
+    posts => @listdir
+  };
+
+  $c->render(json => $resp);
+};
+
+app->start;
+__DATA__
+
+@@ index.html.ep
+% layout 'default';
+<h1>Published Posts</h1>
+
+@@ layouts/default.html.ep
+<!DOCTYPE html>
+<html>
+  <head><title>Dashboard</title></head>
+  <body><%= content %></body>
+</html>
