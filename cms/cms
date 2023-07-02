@@ -37,12 +37,8 @@ app->start;
 __DATA__
 
 @@ index.html.ep
-% layout 'default';
-<h1>Published Posts</h1>
-
-@@ layouts/default.html.ep
 <!DOCTYPE html>
 <html>
   <head><title>Dashboard</title></head>
-  <body><%= content %></body>
+  <body><h1>Published Posts</h1></body>
 </html>
