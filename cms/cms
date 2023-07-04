@@ -3,19 +3,19 @@ use Mojolicious::Lite -signatures;
 use Mojo::File 'path';
 use YAML;
 
-sub get_title {
+sub get_meta {
   my $file = shift;
   my $content = $file->slurp;
 
   my ($meta, $_excerpt, $_body) = Load($content);
-  return $meta->{title};
+  return { title => $meta->{title}, slug => $meta->{slug}, created_at => $meta->{created_at} };
 }
 
 sub posts {
   my $path = path('../site/posts');
   my @posts = $path
     ->list({dir => 1})
-    ->map(sub { { title => get_title($_) }; } );
+    ->map(\&get_meta);
   return @posts;
 }
 
@@ -39,6 +39,62 @@ __DATA__
 @@ index.html.ep
 <!DOCTYPE html>
 <html>
-  <head><title>Dashboard</title></head>
-  <body><h1>Published Posts</h1></body>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://fonts.xz.style/serve/inter.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
+    <style>.post-title{color:#000;text-decoration:none;}.nowrap{white-space:nowrap}</style>
+  </head>
+  <body>
+    <header>
+      <h1>Published Posts</h1>
+    </header>
+    <div class="posts">
+      <p><a href="/#/new"><button>New Post</button></a></p>
+
+      <table class="post-list">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Posted at</th>
+            <th class="nowrap">Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <script>
+      fetch('/posts')
+        .then(response => response.json())
+        .then(data => setPostList(data));
+      function setPostList(data) {
+        const postListContainer = document.querySelector('.post-list').tBodies[0];
+        const posts = data.posts
+          .map(post => { post.dtCreatedAt = new Date(post.created_at); return post; })
+          .sort((postA, postB) => {
+            const a = postA.dtCreatedAt
+                , b = postB.dtCreatedAt
+            if (a<b) { return 1; }
+            if (b<a) { return -1; }
+            return 0;
+          });
+
+        posts.forEach(post => {
+          const title = post.title;
+          const slug = post.slug;
+          const posted = post.dtCreatedAt.toLocaleString('en-GB');
+
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>
+            <a href="https://prehistoric.me/${slug}" class="post-title">${title}</a>
+          </td>
+          <td class="nowrap">${posted}</td>
+          <td><a href="/#/edit/${slug}">Edit</a></td>`;
+          postListContainer.appendChild(row);
+        });
+      }
+    </script>
+  </body>
 </html>
