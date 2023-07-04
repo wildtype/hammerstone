@@ -1,7 +1,7 @@
 'use strict';
 
 const { src, dest } = require('gulp');
-const sass = require('gulp-sass');
+const sass = require('gulp-sass')(require('sass'));
 const postcss = require('gulp-postcss');
 const cssImport = require('postcss-import');
 const cssnano = require('cssnano');
