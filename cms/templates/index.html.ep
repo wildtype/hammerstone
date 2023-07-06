@@ -52,7 +52,7 @@
             <a href="https://prehistoric.me/${slug}" class="post-title">${title}</a>
           </td>
           <td class="nowrap">${posted}</td>
-          <td><a href="/#/edit/${slug}">Edit</a></td>`;
+          <td><a href="/edit/#/${slug}">Edit</a></td>`;
           postListContainer.appendChild(row);
         });
       }

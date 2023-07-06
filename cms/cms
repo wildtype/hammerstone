@@ -2,6 +2,8 @@
 use Mojolicious::Lite -signatures;
 use Mojo::File 'path';
 use YAML;
+use utf8;
+use Encode qw(encode_utf8 decode_utf8);
 
 sub get_meta {
   my $file = shift;
@@ -26,7 +28,7 @@ sub all_posts {
 sub get_post {
   my $slug = shift;
   my $file = path('../site/posts/' . $slug . '.yml');
-  my $content = $file->slurp;
+  my $content = decode_utf8($file->slurp);
 
   my ($meta, $excerpt, $body) = Load($content);
 

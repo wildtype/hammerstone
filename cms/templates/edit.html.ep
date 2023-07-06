@@ -10,16 +10,37 @@
   </head>
   <body>
     <header>
-      <h1>Edit</h1>
+      <h1>Edit<span id="head-title"></span></h1>
     </header>
     <div class="editor">
       <form>
         <p><label for="title">Title</label><br><input type="text" name="title" id="title"></p>
         <p><label for="content">Content</label><br><textarea id="content" rows="20"></textarea></p>
         <p><label for="excerpt">Excerpt</label><br><textarea id="excerpt" rows="10"></textarea></p>
+        <p><button type="button">Save</button> <a href="/"><button type="button">Cancel</button></a>
       </form>
     </div>
     <script>
+      function main() {
+        const headTitle = document.getElementById('head-title');
+        const titleForm = document.getElementById('title');
+        const contentForm = document.getElementById('content');
+        const excerptForm = document.getElementById('excerpt');
+        const slug = location.hash.replace(/^#\//, '');
+
+        if (slug) {
+          fetch(`/posts/${slug}`)
+            .then(response => response.json())
+            .then(data => {
+              headTitle.textContent = `: ${data.title}`;
+              titleForm.value = data.title;
+              contentForm.innerHTML = data.content;
+              excerptForm.innerHTML = data.excerpt;
+            });
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', main);
     </script>
   </body>
 </html>

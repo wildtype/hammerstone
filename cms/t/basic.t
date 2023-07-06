@@ -18,9 +18,9 @@ $t->get_ok('/posts')
   ->json_is('/posts/0/created_at', '2019-12-31T23:51:04+07:00');
 
 $t->get_ok('/posts/2019')
-->status_is(200)
-->json_like('/title', qr/2019: Dari Birdwatching/)
-->json_like('/content', qr/Meskipun akhir pekan banyak mengamat burung/)
-->json_like('/excerpt', qr/Postingan wajib/);
+  ->status_is(200)
+  ->json_like('/title', qr/2019: Dari Birdwatching/)
+  ->json_like('/content', qr/Meskipun akhir pekan banyak mengamat burung/)
+  ->json_like('/excerpt', qr/Postingan wajib/);
 
 done_testing();
