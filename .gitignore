@@ -1,5 +1,5 @@
 **/node_modules/
-/*/public/
+/site/**/public/
 /*/dist
 _Deparsed_XSubs.pm
 .idea

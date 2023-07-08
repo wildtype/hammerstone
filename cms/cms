@@ -32,6 +32,11 @@ sub get_post {
 
   my ($meta, $excerpt, $body) = Load($content);
 
+  if (!$body) {
+    $body = $excerpt;
+    $excerpt = undef;
+  }
+
   return {
     title => $meta->{title},
     content => $body,
@@ -39,8 +44,9 @@ sub get_post {
   };
 }
 
-get '/' => 'index';
-get '/edit' => 'edit';
+get '/' => sub ($c) {$c->reply->static('index.html')};
+get '/edit' => sub ($c) {$c->reply->static('edit.html')};
+get '/new' => sub ($c) {$c->reply->static('new.html')};
 
 get '/posts/:slug' => sub ($c) {
   my $slug = $c->param('slug');
