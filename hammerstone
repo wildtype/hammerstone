@@ -62,7 +62,7 @@ sub Config {
     $method =~ s/Post:://;
 
     die "NoMethodError: $method" unless (
-      grep /^$method$/, qw(title slug content excerpt created_at DESTROY)
+      grep /^$method$/, qw(title slug content excerpt created_at published DESTROY)
     );
 
     if (defined $rvalue) {
@@ -80,10 +80,14 @@ sub Config {
       $b->created_at->compare($a->created_at);
     };
 
-    return sort $descending_by_created_at map(
+    my @sorted = sort $descending_by_created_at map(
       $class->__load_from_yaml($_),
       glob($post_src_glob)
     );
+
+    my @filtered = grep { $_->published == 1 } @sorted;
+
+    return @filtered;
   }
 
   sub __load_from_yaml {
@@ -104,6 +108,12 @@ sub Config {
     });
 
     $post->created_at = $created_at;
+
+    if ($metadata->{published} && $metadata->{published} eq 'false') {
+      $post->published = 0;
+    } else {
+      $post->published = 1;
+    }
 
     if (defined $content) {
       $post->content = decode_utf8 creole_parse $content;
