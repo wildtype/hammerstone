@@ -66,4 +66,9 @@ get '/posts' => sub ($c) {
   $c->render(json => $resp);
 };
 
+post '/posts' => sub ($c) {
+  my $params = $c->req->params->to_hash;
+  $c->render(text => Dumper($params), format =>'txt');
+};
+
 app->start;
