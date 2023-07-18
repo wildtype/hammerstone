@@ -3,8 +3,9 @@ use Mojo::Base -strict;
 use Test::Mojo;
 use Test::More;
 
-use Mojo::File 'curfile';
-my $t = Test::Mojo->new(curfile->dirname->sibling('cms'));
+use FindBin '$Bin';
+use Mojo::File;
+my $t = Test::Mojo->new(Mojo::File->new("$Bin/../cms/cms"));
 
 $t->get_ok('/')
   ->text_is('html head title' => 'Dashboard: Index')

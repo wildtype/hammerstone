@@ -7,6 +7,12 @@ use Mojo::UserAgent;
 use Mojo::JSON 'decode_json';
 use Data::Dumper;
 
+use FindBin '$Bin';
+
+our $BaseDir;
+
+$BaseDir = "$Bin/../site/posts/";
+
 sub as_issue {
   my $from_json = shift;
   my $issue = {};
@@ -57,6 +63,12 @@ sub from_github {
   )->result->body;
 
   return $data;
+}
+
+sub existing_files {
+  my $dir = Mojo::File->new($BaseDir);
+
+  return $dir->list();
 }
 
 sub main {

@@ -5,8 +5,13 @@ use Test::More;
 use FindBin '$Bin';
 use lib "$Bin/../tools";
 use Mojo::JSON 'decode_json';
+use Mojo::File;
 
 require_ok('from_github_issues.pl');
+
+my $tmp_posts = Mojo::File->tempdir('tempYAYAXXXX');
+
+$FromGithubIssues::BaseDir = $tmp_posts->to_string();
 
 my $json = do { local $/; <DATA> };
 my $data = decode_json($json);
@@ -15,7 +20,14 @@ my @issues = FromGithubIssues::issues($data);
 is $issues[0]->{title}, 'Menulis blog, menulis issues';
 is $issues[0]->{slug}, 'issues';
 
+my $f = $tmp_posts->child('issues.yml')->touch;
+
+my $existing_files = FromGithubIssues::existing_files()->map(sub { $_->to_string })->to_array();
+
+is $existing_files->[0], $tmp_posts->child('issues.yml')->to_string();
 done_testing();
+
+print $tmp_posts->to_string;
 
 __DATA__
 [

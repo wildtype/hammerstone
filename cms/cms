@@ -4,6 +4,8 @@ use Mojo::File 'path';
 use YAML;
 use utf8;
 use Encode qw(encode_utf8 decode_utf8);
+use FindBin '$Bin';
+use Data::Dumper;
 
 sub get_meta {
   my $file = shift;
@@ -18,7 +20,7 @@ sub get_meta {
 }
 
 sub all_posts {
-  my $path = path('../site/posts');
+  my $path = path("$Bin/../site/posts");
   my @posts = $path
     ->list({dir => 1})
     ->map(\&get_meta);
@@ -27,7 +29,7 @@ sub all_posts {
 
 sub get_post {
   my $slug = shift;
-  my $file = path('../site/posts/' . $slug . '.yml');
+  my $file = path($Bin . '/../site/posts/' . $slug . '.yml');
   my $content = decode_utf8($file->slurp);
 
   my ($meta, $excerpt, $body) = Load($content);
